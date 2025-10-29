@@ -1,0 +1,12 @@
+{
+  "name": "word-scroller",
+  "version": "1.0.0",
+  "description": "Word scroller with syllable highlighting",
+  "scripts": {
+    "deploy": "wrangler pages deploy . --project-name=word-scroller",
+    "dev": "wrangler pages dev ."
+  },
+  "devDependencies": {
+    "wrangler": "^4.45.2"
+  }
+}
