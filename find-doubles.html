@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trouve le Double</title>
+    <style>
+        @font-face {
+            font-family: 'OpenDyslexic';
+            src: url('OpenDyslexicAlta-Regular.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'OpenDyslexic', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .score {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .lists-container {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .word-list {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            min-width: 250px;
+        }
+
+        .word-list h2 {
+            color: white;
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .word-item {
+            color: white;
+            font-size: 22px;
+            padding: 12px 20px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .word-item .syllable-2 {
+            color: #ff4444;
+        }
+
+        .word-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .word-item.selected {
+            background: rgba(147, 197, 253, 0.5);
+            border: 2px solid #60a5fa;
+        }
+
+        .word-item.correct {
+            background: #4ade80;
+            animation: pulse 0.5s ease;
+        }
+
+        .word-item.wrong {
+            background: #f87171;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            font-family: 'OpenDyslexic', 'Arial', sans-serif;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .admin-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 999;
+            transition: all 0.3s ease;
+        }
+
+        .admin-toggle:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .admin-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+
+        .admin-panel.visible {
+            display: block;
+        }
+
+        .admin-panel h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .admin-panel textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-family: 'OpenDyslexic', 'Arial', monospace;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        .admin-panel .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .admin-panel button {
+            flex: 1;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+        }
+
+        .admin-panel button:hover {
+            background: #5568d3;
+        }
+
+        .admin-panel .info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        .message {
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <button class="admin-toggle" id="adminToggle">Admin</button>
+
+    <div class="admin-panel" id="adminPanel">
+        <h2>Gestion des Mots</h2>
+        <textarea id="wordInput" placeholder="Entrez un mot par ligne avec les syllabes séparées par •&#10;Exemple:&#10;mai•son&#10;chien&#10;voi•ture"></textarea>
+        <div class="button-group">
+            <button id="saveWords">Sauvegarder</button>
+            <button id="resetWords">Réinitialiser</button>
+        </div>
+        <button id="closeAdmin">Fermer</button>
+        <div class="info">
+            💡 Entrez une liste de mots (un par ligne).<br>
+            Utilisez le caractère • (Alt+Shift+9 sur Mac ou Alt+0149 sur Windows) pour séparer les syllabes.<br>
+            La 2ème syllabe apparaîtra en rouge.<br>
+            Exemple: mai•son, té•lé•phone
+        </div>
+    </div>
+
+    <h1>Trouve le Double</h1>
+
+    <div class="score">
+        Score: <span id="scoreValue">0</span>
+    </div>
+
+    <div class="lists-container">
+        <div class="word-list">
+            <h2>Liste A</h2>
+            <div id="listA"></div>
+        </div>
+
+        <div class="word-list">
+            <h2>Liste B</h2>
+            <div id="listB"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="newGame">Nouvelle Partie</button>
+        <button id="resetScore">Réinitialiser Score</button>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <script>
+        // Mots par défaut avec séparation syllabique (utilisez • pour séparer les syllabes)
+        const defaultWords = [
+            'mai•son', 'chien', 'voi•ture', 'so•leil', 'li•vre',
+            'or•di•na•teur', 'ta•ble', 'chaise', 'fe•nê•tre', 'porte',
+            'jar•din', 'fleur', 'ar•bre', 'chat', 'oi•seau',
+            'pain', 'fro•mage', 'eau', 'ca•fé', 'thé',
+            'é•cole', 'sty•lo', 'ca•hier', 'rè•gle', 'gomme',
+            'té•lé•phone', 'mu•sique', 'film', 'pho•to', 'let•tre'
+        ];
+
+        // Variables
+        let words = [];
+        let score = 0;
+        let currentDouble = '';
+        let isWaiting = false;
+        let selectedWords = { A: null, B: null };
+
+        const listAElement = document.getElementById('listA');
+        const listBElement = document.getElementById('listB');
+        const scoreElement = document.getElementById('scoreValue');
+        const messageElement = document.getElementById('message');
+        const adminToggle = document.getElementById('adminToggle');
+        const adminPanel = document.getElementById('adminPanel');
+        const closeAdmin = document.getElementById('closeAdmin');
+        const wordInput = document.getElementById('wordInput');
+        const saveWordsBtn = document.getElementById('saveWords');
+        const resetWordsBtn = document.getElementById('resetWords');
+        const newGameBtn = document.getElementById('newGame');
+        const resetScoreBtn = document.getElementById('resetScore');
+
+        // Charger les mots depuis localStorage
+        function loadWords() {
+            const savedWords = localStorage.getItem('doubleFinderWords');
+            if (savedWords) {
+                words = JSON.parse(savedWords);
+            } else {
+                words = [...defaultWords];
+            }
+        }
+
+        // Sauvegarder les mots
+        function saveWords(wordList) {
+            words = wordList;
+            localStorage.setItem('doubleFinderWords', JSON.stringify(words));
+        }
+
+        // Charger le score
+        function loadScore() {
+            const savedScore = localStorage.getItem('doubleFinderScore');
+            if (savedScore) {
+                score = parseInt(savedScore);
+                updateScoreDisplay();
+            }
+        }
+
+        // Sauvegarder le score
+        function saveScore() {
+            localStorage.setItem('doubleFinderScore', score.toString());
+        }
+
+        // Mettre à jour l'affichage du score
+        function updateScoreDisplay() {
+            scoreElement.textContent = score;
+        }
+
+        // Mélanger un tableau
+        function shuffle(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Générer une nouvelle partie
+        function generateGame() {
+            if (words.length < 11) {
+                messageElement.textContent = '⚠️ Il faut au moins 11 mots dans la liste!';
+                messageElement.style.color = '#f87171';
+                return;
+            }
+
+            messageElement.textContent = '';
+            isWaiting = false;
+            selectedWords = { A: null, B: null };
+
+            // Mélanger les mots
+            const shuffledWords = shuffle(words);
+
+            // Sélectionner le mot double
+            currentDouble = shuffledWords[0];
+
+            // Créer liste A (5 mots dont le double)
+            const listA = [currentDouble, ...shuffledWords.slice(1, 5)];
+
+            // Créer liste B (5 mots dont le double)
+            const listB = [currentDouble, ...shuffledWords.slice(5, 9)];
+
+            // Mélanger les listes
+            const shuffledListA = shuffle(listA);
+            const shuffledListB = shuffle(listB);
+
+            // Afficher les listes
+            displayList(listAElement, shuffledListA, 'A');
+            displayList(listBElement, shuffledListB, 'B');
+        }
+
+        // Afficher une liste
+        function displayList(container, wordList, listName) {
+            container.innerHTML = '';
+            wordList.forEach(word => {
+                const wordItem = document.createElement('div');
+                wordItem.className = 'word-item';
+
+                // Découper en syllabes en utilisant le séparateur •
+                const syllables = word.split('•');
+
+                // Créer un span pour chaque syllabe
+                syllables.forEach((syllable, index) => {
+                    const syllableSpan = document.createElement('span');
+                    syllableSpan.textContent = syllable;
+
+                    // Mettre la 2ème syllabe en rouge
+                    if (index === 1) {
+                        syllableSpan.className = 'syllable-2';
+                    }
+
+                    wordItem.appendChild(syllableSpan);
+                });
+
+                wordItem.dataset.word = word;
+                wordItem.dataset.list = listName;
+                wordItem.addEventListener('click', handleWordClick);
+                container.appendChild(wordItem);
+            });
+        }
+
+        // Gérer le clic sur un mot
+        function handleWordClick(event) {
+            if (isWaiting) return;
+
+            const clickedWord = event.target.dataset.word;
+            const listName = event.target.dataset.list;
+            const wordElement = event.target;
+
+            // Si le mot de cette liste est déjà sélectionné, le désélectionner
+            if (selectedWords[listName] === wordElement) {
+                wordElement.classList.remove('selected');
+                selectedWords[listName] = null;
+                return;
+            }
+
+            // Désélectionner l'ancien mot de cette liste s'il existe
+            if (selectedWords[listName]) {
+                selectedWords[listName].classList.remove('selected');
+            }
+
+            // Sélectionner le nouveau mot
+            wordElement.classList.add('selected');
+            selectedWords[listName] = wordElement;
+
+            // Vérifier si les deux listes ont une sélection
+            if (selectedWords.A && selectedWords.B) {
+                const wordA = selectedWords.A.dataset.word;
+                const wordB = selectedWords.B.dataset.word;
+
+                // Vérifier si les deux mots sont identiques et correspondent au double
+                if (wordA === wordB && wordA === currentDouble) {
+                    // Correct! Les deux bons mots ont été trouvés
+                    selectedWords.A.classList.remove('selected');
+                    selectedWords.B.classList.remove('selected');
+                    selectedWords.A.classList.add('correct');
+                    selectedWords.B.classList.add('correct');
+
+                    score++;
+                    updateScoreDisplay();
+                    saveScore();
+                    messageElement.textContent = '✅ Bravo! Les deux mots trouvés! +1 point';
+                    messageElement.style.color = '#4ade80';
+
+                    // Désactiver les clics temporairement
+                    isWaiting = true;
+
+                    // Générer une nouvelle partie après 1.5 secondes
+                    setTimeout(() => {
+                        generateGame();
+                    }, 1500);
+                } else if (wordA === wordB) {
+                    // Même mot mais pas le bon double
+                    selectedWords.A.classList.remove('selected');
+                    selectedWords.B.classList.remove('selected');
+                    selectedWords.A.classList.add('wrong');
+                    selectedWords.B.classList.add('wrong');
+                    messageElement.textContent = '❌ Ce n\'est pas le bon double!';
+                    messageElement.style.color = '#f87171';
+
+                    // Retirer les classes et réinitialiser après l'animation
+                    setTimeout(() => {
+                        selectedWords.A.classList.remove('wrong');
+                        selectedWords.B.classList.remove('wrong');
+                        selectedWords = { A: null, B: null };
+                    }, 500);
+                } else {
+                    // Deux mots différents
+                    messageElement.textContent = '❌ Les mots ne sont pas identiques!';
+                    messageElement.style.color = '#f87171';
+
+                    selectedWords.A.classList.add('wrong');
+                    selectedWords.B.classList.add('wrong');
+
+                    // Retirer les classes et réinitialiser après l'animation
+                    setTimeout(() => {
+                        selectedWords.A.classList.remove('selected', 'wrong');
+                        selectedWords.B.classList.remove('selected', 'wrong');
+                        selectedWords = { A: null, B: null };
+                    }, 500);
+                }
+            }
+        }
+
+        // Gestion du panneau admin
+        adminToggle.addEventListener('click', () => {
+            adminPanel.classList.toggle('visible');
+            if (adminPanel.classList.contains('visible')) {
+                wordInput.value = words.join('\n');
+                adminToggle.style.display = 'none';
+            }
+        });
+
+        closeAdmin.addEventListener('click', () => {
+            adminPanel.classList.remove('visible');
+            adminToggle.style.display = 'block';
+        });
+
+        // Sauvegarder les mots
+        saveWordsBtn.addEventListener('click', () => {
+            const inputWords = wordInput.value
+                .split('\n')
+                .map(w => w.trim())
+                .filter(w => w.length > 0);
+
+            if (inputWords.length >= 11) {
+                saveWords(inputWords);
+                generateGame();
+                alert('Mots sauvegardés avec succès!');
+            } else {
+                alert('Veuillez entrer au moins 11 mots.');
+            }
+        });
+
+        // Réinitialiser aux mots par défaut
+        resetWordsBtn.addEventListener('click', () => {
+            if (confirm('Voulez-vous vraiment réinitialiser la liste aux mots par défaut?')) {
+                saveWords([...defaultWords]);
+                wordInput.value = words.join('\n');
+                generateGame();
+                alert('Liste réinitialisée!');
+            }
+        });
+
+        // Nouvelle partie
+        newGameBtn.addEventListener('click', () => {
+            generateGame();
+        });
+
+        // Réinitialiser le score
+        resetScoreBtn.addEventListener('click', () => {
+            if (confirm('Voulez-vous vraiment réinitialiser le score?')) {
+                score = 0;
+                updateScoreDisplay();
+                saveScore();
+                messageElement.textContent = 'Score réinitialisé!';
+                messageElement.style.color = 'white';
+            }
+        });
+
+        // Initialiser
+        loadWords();
+        loadScore();
+        generateGame();
+    </script>
+</body>
+</html>

@@ -1,15 +1,23 @@
-# Word Scroller
+# Jeux d'Orthophonie
 
-Un défilement de mots avec découpage syllabique et mise en évidence de la 2ème syllabe.
+Collection de jeux éducatifs pour l'orthophonie avec police OpenDyslexic et découpage syllabique.
 
-## Fonctionnalités
+## Jeux Disponibles
 
+### 1. Défilement de Mots
 - Défilement lent et personnalisable des mots
 - Découpage en syllabes avec la 2ème syllabe en rouge
 - Police OpenDyslexic pour une meilleure lisibilité
 - Panneau d'administration pour gérer les mots
 - Sauvegarde locale des mots dans le localStorage
 - Contrôles: Pause/Play, Réinitialiser, Vitesse ajustable
+
+### 2. Trouve le Double
+- Deux listes de mots avec un mot en commun
+- Trouvez et sélectionnez les deux mots identiques
+- Système de score avec sauvegarde
+- 2ème syllabe en rouge pour faciliter la lecture
+- Panneau admin pour gérer la liste de mots
 
 ## Déploiement avec Wrangler (Cloudflare Pages)
 
@@ -64,8 +72,11 @@ Puis ouvrez http://localhost:8788
 
 ## Fichiers
 
-- `index.html` - Application principale
+- `index.html` - Page d'accueil / Menu principal
+- `word-scroller.html` - Jeu de défilement de mots
+- `find-doubles.html` - Jeu de recherche de doubles
 - `OpenDyslexicAlta-Regular.otf` - Police OpenDyslexic (à ajouter si vous souhaitez utiliser cette police)
 - `wrangler.toml` - Configuration Cloudflare
 - `package.json` - Configuration npm
 - `_headers` - En-têtes de sécurité Cloudflare
+- `.github/workflows/deploy.yml` - Workflow de déploiement automatique GitHub Actions

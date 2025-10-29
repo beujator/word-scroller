@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Défilement de Mots</title>
+    <title>Jeux d'Orthophonie</title>
     <style>
         @font-face {
             font-family: 'OpenDyslexic';
@@ -21,390 +21,131 @@
         body {
             font-family: 'OpenDyslexic', 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            padding: 20px;
         }
 
         h1 {
             color: white;
-            margin-bottom: 30px;
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .subtitle {
+            color: white;
+            font-size: 20px;
+            margin-bottom: 50px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .games-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 400px));
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px 30px;
+            border-radius: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .game-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .game-title {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .scroll-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            border-radius: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            width: 600px;
-            height: 150px;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .scroll-content {
-            display: flex;
-            align-items: center;
-            animation: scroll 60s linear infinite;
-            white-space: nowrap;
-            height: 100%;
-        }
-
-        .word {
-            color: white;
-            font-size: 64px;
-            font-weight: bold;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
-            margin: 0 150px;
-            display: inline-block;
-        }
-
-        @keyframes scroll {
-            0% {
-                transform: translateX(0);
-            }
-            100% {
-                transform: translateX(-50%);
-            }
-        }
-
-        .controls {
-            margin-top: 30px;
-            display: flex;
-            gap: 15px;
-        }
-
-        button {
-            padding: 12px 24px;
+        .game-description {
+            color: rgba(255, 255, 255, 0.9);
             font-size: 16px;
-            border: none;
-            border-radius: 25px;
-            background: white;
-            color: #667eea;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
+            line-height: 1.6;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        .speed-control {
-            color: white;
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        input[type="range"] {
-            width: 200px;
-            cursor: pointer;
-        }
-
-        .admin-panel {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            max-width: 400px;
-            display: none;
-            z-index: 1000;
-        }
-
-        .admin-panel.visible {
-            display: block;
-        }
-
-        .admin-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            padding: 10px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            z-index: 999;
-            transition: all 0.3s ease;
-        }
-
-        .admin-toggle:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        .admin-panel h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 20px;
-        }
-
-        .admin-panel textarea {
-            width: 100%;
-            min-height: 300px;
-            padding: 10px;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            font-family: 'OpenDyslexic', 'Arial', monospace;
+        .footer {
+            color: rgba(255, 255, 255, 0.7);
             font-size: 14px;
-            resize: vertical;
-            margin-bottom: 10px;
+            margin-top: 50px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
-        .admin-panel .button-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 36px;
+            }
 
-        .admin-panel button {
-            flex: 1;
-            padding: 10px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
+            .subtitle {
+                font-size: 18px;
+            }
 
-        .admin-panel button:hover {
-            background: #5568d3;
-        }
-
-        .admin-panel .info {
-            font-size: 12px;
-            color: #666;
-            margin-top: 10px;
-            line-height: 1.5;
+            .games-container {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <button class="admin-toggle" id="adminToggle">Admin</button>
+    <h1>Jeux d'Orthophonie</h1>
+    <p class="subtitle">Choisissez un jeu pour commencer</p>
 
-    <div class="admin-panel" id="adminPanel">
-        <h2>Gestion des Mots</h2>
-        <textarea id="wordInput" placeholder="Entrez un mot par ligne avec les syllabes séparées par •&#10;Exemple:&#10;Bon•jour&#10;Bien•ve•nue"></textarea>
-        <div class="button-group">
-            <button id="saveWords">Sauvegarder</button>
-            <button id="resetWords">Réinitialiser</button>
-        </div>
-        <button id="closeAdmin">Fermer</button>
-        <div class="info">
-            💡 Utilisez le caractère • (Alt+Shift+9 sur Mac ou Alt+0149 sur Windows) pour séparer les syllabes.<br>
-            La 2ème syllabe apparaîtra en rouge.
-        </div>
+    <div class="games-container">
+        <a href="word-scroller.html" class="game-card">
+            <div class="game-icon">📖</div>
+            <h2 class="game-title">Défilement de Mots</h2>
+            <p class="game-description">
+                Les mots défilent lentement avec la 2ème syllabe en rouge.
+                Contrôlez la vitesse, mettez en pause et gérez votre liste de mots.
+            </p>
+        </a>
+
+        <a href="find-doubles.html" class="game-card">
+            <div class="game-icon">🔍</div>
+            <h2 class="game-title">Trouve le Double</h2>
+            <p class="game-description">
+                Deux listes de mots avec un mot en commun.
+                Trouvez et sélectionnez les deux mots identiques pour gagner des points!
+            </p>
+        </a>
     </div>
 
-    <h1>Défilement de Mots</h1>
-
-    <div class="scroll-container">
-        <div class="scroll-content" id="scrollContent">
-            <!-- Les mots seront générés ici par JavaScript -->
-        </div>
+    <div class="footer">
+        <p>Tous les jeux utilisent la police OpenDyslexic pour une meilleure lisibilité</p>
     </div>
-
-    <div class="controls">
-        <button id="pauseBtn">Pause</button>
-        <button id="resetBtn">Réinitialiser</button>
-    </div>
-
-    <div class="speed-control">
-        <label>Vitesse:</label>
-        <input type="range" id="speedRange" min="1" max="50" value="15">
-        <span id="speedValue">1x</span>
-    </div>
-
-    <script>
-        // 🎯 Mots par défaut
-        const defaultWords = [
-            'Bon•jour',
-            'Bien•ve•nue',
-            'Cré•a•ti•vi•té',
-            'In•no•va•tion',
-            'Dé•ve•lop•pe•ment',
-            'De•sign',
-            'Tech•no•lo•gie',
-            'A•ve•nir',
-            'Suc•cess',
-            'Mo•ti•va•tion'
-        ];
-
-        // Charger les mots depuis localStorage ou utiliser les mots par défaut
-        let words = [];
-
-        function loadWords() {
-            const savedWords = localStorage.getItem('scrollerWords');
-            if (savedWords) {
-                words = JSON.parse(savedWords);
-            } else {
-                words = [...defaultWords];
-            }
-        }
-
-        function saveWords(wordList) {
-            words = wordList;
-            localStorage.setItem('scrollerWords', JSON.stringify(words));
-        }
-
-        // Variables
-        const scrollContent = document.getElementById('scrollContent');
-        const pauseBtn = document.getElementById('pauseBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const speedRange = document.getElementById('speedRange');
-        const speedValue = document.getElementById('speedValue');
-        const adminToggle = document.getElementById('adminToggle');
-        const adminPanel = document.getElementById('adminPanel');
-        const closeAdmin = document.getElementById('closeAdmin');
-        const wordInput = document.getElementById('wordInput');
-        const saveWordsBtn = document.getElementById('saveWords');
-        const resetWordsBtn = document.getElementById('resetWords');
-        let isPaused = false;
-
-        // Générer le contenu (dupliquer les mots pour un défilement continu)
-        function generateContent() {
-            scrollContent.innerHTML = '';
-            // Dupliquer les mots 10 fois pour assurer un défilement fluide et continu
-            for (let i = 0; i < 10; i++) {
-                words.forEach(word => {
-                    const span = document.createElement('span');
-                    span.className = 'word';
-
-                    // Découper en syllabes en utilisant le séparateur •
-                    const syllables = word.split('•');
-
-                    // Créer un span pour chaque syllabe
-                    syllables.forEach((syllable, index) => {
-                        const syllableSpan = document.createElement('span');
-                        syllableSpan.textContent = syllable;
-
-                        // Mettre la 2ème syllabe en rouge
-                        if (index === 1) {
-                            syllableSpan.style.color = '#ff4444';
-                        }
-
-                        span.appendChild(syllableSpan);
-                    });
-
-                    scrollContent.appendChild(span);
-                });
-            }
-        }
-
-        // Mettre à jour la vitesse d'animation
-        function updateSpeed(speed) {
-            // Convertir le slider (1-50) en durée (600s à 10s)
-            // Plus le slider est élevé, plus c'est rapide (durée courte)
-            // Utilisation d'une courbe pour avoir plus de contrôle aux vitesses lentes
-            const duration = 610 - (speed * 12);
-            scrollContent.style.animationDuration = duration + 's';
-
-            // Afficher le multiplicateur de vitesse
-            const speedMultiplier = (15 / speed).toFixed(1);
-            speedValue.textContent = speedMultiplier + 'x';
-
-            // Forcer le redémarrage de l'animation
-            scrollContent.style.animation = 'none';
-            setTimeout(() => {
-                scrollContent.style.animation = `scroll ${duration}s linear infinite`;
-            }, 10);
-        }
-
-        // Pause/Play
-        pauseBtn.addEventListener('click', () => {
-            if (isPaused) {
-                scrollContent.style.animationPlayState = 'running';
-                pauseBtn.textContent = 'Pause';
-            } else {
-                scrollContent.style.animationPlayState = 'paused';
-                pauseBtn.textContent = 'Play';
-            }
-            isPaused = !isPaused;
-        });
-
-        // Réinitialiser
-        resetBtn.addEventListener('click', () => {
-            scrollContent.style.animation = 'none';
-            setTimeout(() => {
-                scrollContent.style.animation = '';
-                updateSpeed(speedRange.value);
-            }, 10);
-        });
-
-        // Contrôle de vitesse
-        speedRange.addEventListener('input', (e) => {
-            updateSpeed(e.target.value);
-        });
-
-        // Gestion du panneau admin
-        adminToggle.addEventListener('click', () => {
-            adminPanel.classList.toggle('visible');
-            if (adminPanel.classList.contains('visible')) {
-                // Charger les mots actuels dans le textarea
-                wordInput.value = words.join('\n');
-                adminToggle.style.display = 'none';
-            }
-        });
-
-        closeAdmin.addEventListener('click', () => {
-            adminPanel.classList.remove('visible');
-            adminToggle.style.display = 'block';
-        });
-
-        // Sauvegarder les mots
-        saveWordsBtn.addEventListener('click', () => {
-            const inputWords = wordInput.value
-                .split('\n')
-                .map(w => w.trim())
-                .filter(w => w.length > 0);
-
-            if (inputWords.length > 0) {
-                saveWords(inputWords);
-                generateContent();
-                updateSpeed(speedRange.value);
-                alert('Mots sauvegardés avec succès!');
-            } else {
-                alert('Veuillez entrer au moins un mot.');
-            }
-        });
-
-        // Réinitialiser aux mots par défaut
-        resetWordsBtn.addEventListener('click', () => {
-            if (confirm('Voulez-vous vraiment réinitialiser la liste aux mots par défaut?')) {
-                saveWords([...defaultWords]);
-                wordInput.value = words.join('\n');
-                generateContent();
-                updateSpeed(speedRange.value);
-                alert('Liste réinitialisée!');
-            }
-        });
-
-        // Initialiser
-        loadWords();
-        generateContent();
-        updateSpeed(speedRange.value);
-    </script>
 </body>
 </html>
