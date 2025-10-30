@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Associe les Calculs - Jeux Éducatifs</title>
+    <style>
+        @font-face {
+            font-family: 'OpenDyslexic';
+            src: url('OpenDyslexicAlta-Regular.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'OpenDyslexic', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .score {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .lists-container {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .math-list {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+            min-width: 250px;
+        }
+
+        .math-list h2 {
+            color: #2c3e50;
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .math-item {
+            color: #2c3e50;
+            font-size: 22px;
+            padding: 12px 20px;
+            margin: 8px 0;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            user-select: none;
+        }
+
+        .math-item:hover {
+            background: rgba(0, 0, 0, 0.1);
+            transform: scale(1.05);
+        }
+
+        .math-item.selected {
+            background: rgba(147, 197, 253, 0.5);
+            border: 2px solid #60a5fa;
+        }
+
+        .math-item.correct {
+            background: #4ade80;
+            animation: pulse 0.5s ease;
+        }
+
+        .math-item.wrong {
+            background: #f87171;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            background: #4a5568;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            font-family: 'OpenDyslexic', 'Arial', sans-serif;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(74, 85, 104, 0.9);
+            color: white;
+            border: 2px solid rgba(74, 85, 104, 1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 999;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .home-link:hover {
+            background: rgba(74, 85, 104, 1);
+        }
+
+        .admin-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(74, 85, 104, 0.9);
+            color: white;
+            border: 2px solid rgba(74, 85, 104, 1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 999;
+            transition: all 0.3s ease;
+        }
+
+        .admin-toggle:hover {
+            background: rgba(74, 85, 104, 1);
+        }
+
+        .admin-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+
+        .admin-panel.visible {
+            display: block;
+        }
+
+        .admin-panel h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .admin-panel textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 10px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-family: 'OpenDyslexic', 'Arial', monospace;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        .admin-panel .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .admin-panel button {
+            flex: 1;
+            padding: 10px;
+            background: #4a5568;
+            color: white;
+        }
+
+        .admin-panel button:hover {
+            background: #2d3748;
+        }
+
+        .admin-panel .info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        .message {
+            color: #2c3e50;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="home-link">← Accueil</a>
+    <button class="admin-toggle" id="adminToggle">Admin</button>
+
+    <div class="admin-panel" id="adminPanel">
+        <h2>Gestion des Calculs</h2>
+        <textarea id="mathInput" placeholder="Entrez un calcul par ligne au format: calcul=résultat&#10;Exemple:&#10;1+3=4&#10;5-2=3&#10;2×3=6&#10;8÷2=4"></textarea>
+        <div class="button-group">
+            <button id="saveMath">Sauvegarder</button>
+            <button id="resetMath">Réinitialiser</button>
+        </div>
+        <button id="resetScore">Réinitialiser le score</button>
+        <button id="closeAdmin">Fermer</button>
+        <div class="info">
+            💡 Entrez une liste de calculs (un par ligne).<br>
+            Format: calcul=résultat<br>
+            Exemple: 3+5=8, 10-4=6<br>
+            Vous pouvez utiliser +, -, ×, ÷
+        </div>
+    </div>
+
+    <h1>Associe les Calculs</h1>
+
+    <div class="score">
+        Score: <span id="scoreValue">0</span>
+    </div>
+
+    <div class="lists-container">
+        <div class="math-list">
+            <h2>Calculs</h2>
+            <div id="listCalculations"></div>
+        </div>
+
+        <div class="math-list">
+            <h2>Résultats</h2>
+            <div id="listResults"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="generateAdditions">Générer Additions</button>
+        <button id="generateMultiplications">Générer Multiplications</button>
+        <button id="newGame">Nouvelle partie</button>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <script>
+        // Calculs par défaut
+        const defaultMath = [
+            '1+3=4', '2+5=7', '3+4=7', '5-2=3', '8-3=5',
+            '2×3=6', '4×2=8', '3×3=9', '5×2=10', '2×4=8',
+            '6÷2=3', '10÷5=2', '8÷4=2', '9÷3=3', '12÷4=3',
+            '5+5=10', '7+3=10', '6-1=5', '9-4=5', '4+4=8',
+            '3×5=15', '2×6=12', '15÷3=5', '20÷4=5', '7×2=14'
+        ];
+
+        // Variables
+        let mathProblems = [];
+        let score = 0;
+        let selectedCalculation = null;
+        let selectedResult = null;
+        let currentPairs = [];
+
+        // Récupérer les éléments
+        const listCalculations = document.getElementById('listCalculations');
+        const listResults = document.getElementById('listResults');
+        const scoreValue = document.getElementById('scoreValue');
+        const message = document.getElementById('message');
+        const newGameBtn = document.getElementById('newGame');
+        const adminToggle = document.getElementById('adminToggle');
+        const adminPanel = document.getElementById('adminPanel');
+        const mathInput = document.getElementById('mathInput');
+        const saveMathBtn = document.getElementById('saveMath');
+        const resetMathBtn = document.getElementById('resetMath');
+        const resetScoreBtn = document.getElementById('resetScore');
+        const closeAdminBtn = document.getElementById('closeAdmin');
+
+        // Charger les calculs
+        function loadMath() {
+            const savedMath = localStorage.getItem('mathMatchProblems');
+            if (savedMath) {
+                mathProblems = JSON.parse(savedMath);
+            } else {
+                mathProblems = [...defaultMath];
+            }
+        }
+
+        // Sauvegarder les calculs
+        function saveMath(mathList) {
+            mathProblems = mathList;
+            localStorage.setItem('mathMatchProblems', JSON.stringify(mathProblems));
+        }
+
+        // Charger le score
+        function loadScore() {
+            const savedScore = localStorage.getItem('mathMatchScore');
+            if (savedScore) {
+                score = parseInt(savedScore);
+                scoreValue.textContent = score;
+            }
+        }
+
+        // Sauvegarder le score
+        function saveScore() {
+            localStorage.setItem('mathMatchScore', score.toString());
+            scoreValue.textContent = score;
+        }
+
+        // Mélanger un tableau
+        function shuffle(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Afficher une liste
+        function displayList(container, itemList, listName) {
+            container.innerHTML = '';
+            itemList.forEach(item => {
+                const mathItem = document.createElement('div');
+                mathItem.className = 'math-item';
+                mathItem.textContent = item;
+                mathItem.dataset.value = item;
+                mathItem.dataset.list = listName;
+
+                mathItem.addEventListener('click', () => handleSelection(mathItem, listName));
+
+                container.appendChild(mathItem);
+            });
+        }
+
+        // Gérer la sélection
+        function handleSelection(item, listName) {
+            // Si l'item est déjà correct, ne rien faire
+            if (item.classList.contains('correct')) return;
+
+            if (listName === 'calculations') {
+                // Désélectionner l'ancien calcul sélectionné
+                if (selectedCalculation) {
+                    selectedCalculation.classList.remove('selected');
+                }
+
+                if (selectedCalculation === item) {
+                    selectedCalculation = null;
+                } else {
+                    selectedCalculation = item;
+                    item.classList.add('selected');
+                }
+            } else {
+                // Désélectionner l'ancien résultat sélectionné
+                if (selectedResult) {
+                    selectedResult.classList.remove('selected');
+                }
+
+                if (selectedResult === item) {
+                    selectedResult = null;
+                } else {
+                    selectedResult = item;
+                    item.classList.add('selected');
+                }
+            }
+
+            // Vérifier si une paire est complète
+            if (selectedCalculation && selectedResult) {
+                checkMatch();
+            }
+        }
+
+        // Vérifier la correspondance
+        function checkMatch() {
+            const calcValue = selectedCalculation.dataset.value;
+            const resultValue = selectedResult.dataset.value;
+
+            // Trouver la paire correspondante
+            const pair = currentPairs.find(p => p.calculation === calcValue);
+
+            if (pair && pair.result === resultValue) {
+                // Bonne réponse
+                selectedCalculation.classList.add('correct');
+                selectedResult.classList.add('correct');
+
+                score++;
+                saveScore();
+                showMessage('✓ Bravo!', 'green');
+
+                // Faire disparaître les éléments après l'animation
+                setTimeout(() => {
+                    selectedCalculation.style.display = 'none';
+                    selectedResult.style.display = 'none';
+                    selectedCalculation = null;
+                    selectedResult = null;
+
+                    // Vérifier si toutes les paires sont trouvées
+                    const visibleItems = document.querySelectorAll('.math-item:not([style*="display: none"])').length;
+                    if (visibleItems === 0) {
+                        showMessage('🎉 Félicitations! Partie terminée!', 'green');
+                    }
+                }, 500);
+            } else {
+                // Mauvaise réponse
+                selectedCalculation.classList.add('wrong');
+                selectedResult.classList.add('wrong');
+                showMessage('✗ Essaie encore!', 'red');
+
+                // Réinitialiser après un délai
+                setTimeout(() => {
+                    selectedCalculation.classList.remove('wrong', 'selected');
+                    selectedResult.classList.remove('wrong', 'selected');
+                    selectedCalculation = null;
+                    selectedResult = null;
+                }, 800);
+            }
+        }
+
+        // Afficher un message
+        function showMessage(text, color) {
+            message.textContent = text;
+            message.style.color = color === 'green' ? '#22c55e' : '#ef4444';
+            setTimeout(() => {
+                message.textContent = '';
+            }, 2000);
+        }
+
+        // Générer une nouvelle partie
+        function generateGame() {
+            selectedCalculation = null;
+            selectedResult = null;
+
+            // Sélectionner 10 calculs aléatoires
+            const shuffledMath = shuffle(mathProblems);
+            const selectedMath = shuffledMath.slice(0, Math.min(10, shuffledMath.length));
+
+            // Créer les paires
+            currentPairs = selectedMath.map(item => {
+                const [calculation, result] = item.split('=');
+                return { calculation, result };
+            });
+
+            // Mélanger les résultats
+            const calculations = currentPairs.map(p => p.calculation);
+            const results = shuffle(currentPairs.map(p => p.result));
+
+            // Afficher les listes
+            displayList(listCalculations, calculations, 'calculations');
+            displayList(listResults, results, 'results');
+
+            message.textContent = '';
+        }
+
+        // Panneau d'administration
+        adminToggle.addEventListener('click', () => {
+            adminPanel.classList.toggle('visible');
+            if (adminPanel.classList.contains('visible')) {
+                mathInput.value = mathProblems.join('\n');
+            }
+        });
+
+        closeAdminBtn.addEventListener('click', () => {
+            adminPanel.classList.remove('visible');
+        });
+
+        // Sauvegarder les nouveaux calculs
+        saveMathBtn.addEventListener('click', () => {
+            const newMath = mathInput.value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0 && line.includes('='));
+
+            if (newMath.length >= 10) {
+                saveMath(newMath);
+                generateGame();
+                adminPanel.classList.remove('visible');
+                alert('Liste sauvegardée!');
+            } else {
+                alert('Veuillez entrer au moins 10 calculs.');
+            }
+        });
+
+        // Réinitialiser aux calculs par défaut
+        resetMathBtn.addEventListener('click', () => {
+            if (confirm('Voulez-vous vraiment réinitialiser la liste aux calculs par défaut?')) {
+                saveMath([...defaultMath]);
+                mathInput.value = mathProblems.join('\n');
+                generateGame();
+                alert('Liste réinitialisée!');
+            }
+        });
+
+        // Réinitialiser le score
+        resetScoreBtn.addEventListener('click', () => {
+            if (confirm('Voulez-vous vraiment réinitialiser le score?')) {
+                score = 0;
+                saveScore();
+                alert('Score réinitialisé!');
+            }
+        });
+
+        // Générer des additions aléatoires
+        function generateAdditions() {
+            const additions = [];
+            for (let i = 0; i < 10; i++) {
+                const num1 = Math.floor(Math.random() * 20) + 1;
+                const num2 = Math.floor(Math.random() * 20) + 1;
+                const result = num1 + num2;
+                additions.push(`${num1}+${num2}=${result}`);
+            }
+            saveMath(additions);
+            generateGame();
+        }
+
+        // Générer des multiplications aléatoires
+        function generateMultiplications() {
+            const multiplications = [];
+            for (let i = 0; i < 10; i++) {
+                const num1 = Math.floor(Math.random() * 10) + 1;
+                const num2 = Math.floor(Math.random() * 10) + 1;
+                const result = num1 * num2;
+                multiplications.push(`${num1}×${num2}=${result}`);
+            }
+            saveMath(multiplications);
+            generateGame();
+        }
+
+        // Event listeners
+        newGameBtn.addEventListener('click', generateGame);
+        document.getElementById('generateAdditions').addEventListener('click', generateAdditions);
+        document.getElementById('generateMultiplications').addEventListener('click', generateMultiplications);
+
+        // Initialisation
+        loadMath();
+        loadScore();
+        generateGame();
+    </script>
+</body>
+</html>
