@@ -206,14 +206,14 @@
 
     <div class="admin-panel" id="adminPanel">
         <h2>Gestion des Mots</h2>
-        <textarea id="wordInput" placeholder="Entrez un mot par ligne avec les syllabes séparées par •&#10;Exemple:&#10;Bon•jour&#10;Bien•ve•nue"></textarea>
+        <textarea id="wordInput" placeholder="Entrez un mot par ligne avec les syllabes séparées par ,&#10;Exemple:&#10;Bon,jour&#10;Bien,ve,nue"></textarea>
         <div class="button-group">
             <button id="saveWords">Sauvegarder</button>
             <button id="resetWords">Réinitialiser</button>
         </div>
         <button id="closeAdmin">Fermer</button>
         <div class="info">
-            💡 Utilisez le caractère • (Alt+Shift+9 sur Mac ou Alt+0149 sur Windows) pour séparer les syllabes.<br>
+            💡 Utilisez la virgule (,) pour séparer les syllabes.<br>
             La 2ème syllabe apparaîtra en rouge.
         </div>
     </div>
@@ -292,8 +292,8 @@
                     const span = document.createElement('span');
                     span.className = 'word';
 
-                    // Découper en syllabes en utilisant le séparateur •
-                    const syllables = word.split('•');
+                    // Découper en syllabes en utilisant le séparateur ,
+                    const syllables = word.split(',');
 
                     // Créer un span pour chaque syllabe
                     syllables.forEach((syllable, index) => {

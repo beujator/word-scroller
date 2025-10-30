@@ -248,7 +248,7 @@
 
     <div class="admin-panel" id="adminPanel">
         <h2>Gestion des Mots</h2>
-        <textarea id="wordInput" placeholder="Entrez un mot par ligne avec les syllabes séparées par •&#10;Exemple:&#10;mai•son&#10;chien&#10;voi•ture"></textarea>
+        <textarea id="wordInput" placeholder="Entrez un mot par ligne avec les syllabes séparées par ,&#10;Exemple:&#10;mai,son&#10;chien&#10;voi,ture"></textarea>
         <div class="button-group">
             <button id="saveWords">Sauvegarder</button>
             <button id="resetWords">Réinitialiser</button>
@@ -256,9 +256,9 @@
         <button id="closeAdmin">Fermer</button>
         <div class="info">
             💡 Entrez une liste de mots (un par ligne).<br>
-            Utilisez le caractère • (Alt+Shift+9 sur Mac ou Alt+0149 sur Windows) pour séparer les syllabes.<br>
+            Utilisez la virgule (,) pour séparer les syllabes.<br>
             La 2ème syllabe apparaîtra en rouge.<br>
-            Exemple: mai•son, té•lé•phone
+            Exemple: mai,son, té,lé,phone
         </div>
     </div>
 
@@ -403,8 +403,8 @@
                 const wordItem = document.createElement('div');
                 wordItem.className = 'word-item';
 
-                // Découper en syllabes en utilisant le séparateur •
-                const syllables = word.split('•');
+                // Découper en syllabes en utilisant le séparateur ,
+                const syllables = word.split(',');
 
                 // Créer un span pour chaque syllabe
                 syllables.forEach((syllable, index) => {
