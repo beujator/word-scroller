@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Fusée des Syllabes - Jeux Éducatifs</title>
+    <style>
+        @font-face {
+            font-family: 'OpenDyslexic';
+            src: url('OpenDyslexicAlta-Regular.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'OpenDyslexic', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .score {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            min-width: 600px;
+        }
+
+        .target-word {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .target-word h2 {
+            color: #4a5568;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .target-word .hint {
+            color: #718096;
+            font-size: 16px;
+            font-style: italic;
+        }
+
+        .assembly-area {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            min-height: 120px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(147, 197, 253, 0.2);
+            border-radius: 15px;
+            border: 3px dashed #60a5fa;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .syllable-slot {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border: 3px solid #cbd5e0;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            transition: all 0.3s ease;
+        }
+
+        .syllable-slot.filled {
+            background: #4ade80;
+            border-color: #22c55e;
+        }
+
+        .syllables-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .rocket-syllable {
+            width: 100px;
+            height: 120px;
+            background: linear-gradient(to bottom, #ef4444 0%, #dc2626 50%, #991b1b 100%);
+            border-radius: 50% 50% 10px 10px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .rocket-syllable:hover {
+            transform: translateY(-10px) scale(1.1);
+        }
+
+        .rocket-syllable::before {
+            content: '🔥';
+            position: absolute;
+            bottom: -20px;
+            font-size: 30px;
+            animation: flame 0.5s infinite alternate;
+        }
+
+        .rocket-syllable::after {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-bottom: 25px solid #ef4444;
+        }
+
+        .rocket-syllable.used {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        @keyframes flame {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.2); }
+        }
+
+        .big-rocket {
+            position: fixed;
+            left: 50%;
+            bottom: -300px;
+            transform: translateX(-50%);
+            font-size: 200px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .big-rocket.launching {
+            animation: launch 3s ease-out forwards;
+        }
+
+        @keyframes launch {
+            0% {
+                bottom: -300px;
+                transform: translateX(-50%) rotate(0deg);
+            }
+            100% {
+                bottom: 150%;
+                transform: translateX(-50%) rotate(10deg);
+            }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            background: #4a5568;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            font-family: 'OpenDyslexic', 'Arial', sans-serif;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(74, 85, 104, 0.9);
+            color: white;
+            border: 2px solid rgba(74, 85, 104, 1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 999;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .home-link:hover {
+            background: rgba(74, 85, 104, 1);
+        }
+
+        .admin-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(74, 85, 104, 0.9);
+            color: white;
+            border: 2px solid rgba(74, 85, 104, 1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 999;
+            transition: all 0.3s ease;
+        }
+
+        .admin-toggle:hover {
+            background: rgba(74, 85, 104, 1);
+        }
+
+        .admin-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+
+        .admin-panel.visible {
+            display: block;
+        }
+
+        .admin-panel h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .admin-panel textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 10px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-family: 'OpenDyslexic', 'Arial', monospace;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        .admin-panel .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .admin-panel button {
+            flex: 1;
+            padding: 10px;
+            background: #4a5568;
+            color: white;
+        }
+
+        .admin-panel button:hover {
+            background: #2d3748;
+        }
+
+        .admin-panel .info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        .message {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            min-height: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                min-width: auto;
+                width: 100%;
+                padding: 20px;
+            }
+
+            .rocket-syllable {
+                width: 80px;
+                height: 100px;
+                font-size: 20px;
+            }
+
+            .syllable-slot {
+                width: 80px;
+                height: 80px;
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="home-link">← Accueil</a>
+    <button class="admin-toggle" id="adminToggle">Admin</button>
+
+    <div class="admin-panel" id="adminPanel">
+        <h2>Gestion des Mots</h2>
+        <textarea id="wordsInput" placeholder="Entrez les mots avec syllabes séparées par , (un par ligne)&#10;Exemple:&#10;mai,son&#10;jar,din&#10;voi,ture&#10;or,di,na,teur&#10;pa,pil,lon"></textarea>
+        <div class="button-group">
+            <button id="saveWords">Sauvegarder</button>
+            <button id="resetWords">Réinitialiser</button>
+        </div>
+        <button id="resetScore">Réinitialiser le score</button>
+        <button id="closeAdmin">Fermer</button>
+        <div class="info">
+            💡 Entrez une liste de mots (un par ligne).<br>
+            Utilisez la virgule (,) pour séparer les syllabes.<br>
+            Minimum 5 mots recommandés.
+        </div>
+    </div>
+
+    <h1>🚀 La Fusée des Syllabes</h1>
+
+    <div class="score">
+        Score: <span id="scoreValue">0</span>
+    </div>
+
+    <div class="game-container">
+        <div class="target-word">
+            <h2>Reconstitue le mot :</h2>
+            <div class="hint" id="hintText"></div>
+        </div>
+
+        <div class="assembly-area" id="assemblyArea"></div>
+
+        <div class="syllables-container" id="syllablesContainer"></div>
+    </div>
+
+    <div class="controls">
+        <button id="checkBtn">Vérifier</button>
+        <button id="clearBtn">Effacer</button>
+        <button id="nextBtn">Mot suivant</button>
+    </div>
+
+    <div class="message" id="message"></div>
+    <div class="big-rocket" id="bigRocket">🚀</div>
+
+    <script>
+        // Mots par défaut
+        const defaultWords = [
+            'mai,son', 'jar,din', 'voi,ture', 'so,leil',
+            'or,di,na,teur', 'pa,pil,lon', 'cho,co,lat',
+            'té,lé,phone', 'bi,cy,clet,te', 'cro,co,dile'
+        ];
+
+        // Variables
+        let words = [];
+        let currentWord = null;
+        let currentSyllables = [];
+        let assembledSyllables = [];
+        let score = 0;
+
+        // Récupérer les éléments
+        const hintText = document.getElementById('hintText');
+        const assemblyArea = document.getElementById('assemblyArea');
+        const syllablesContainer = document.getElementById('syllablesContainer');
+        const scoreValue = document.getElementById('scoreValue');
+        const message = document.getElementById('message');
+        const checkBtn = document.getElementById('checkBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const adminToggle = document.getElementById('adminToggle');
+        const adminPanel = document.getElementById('adminPanel');
+        const wordsInput = document.getElementById('wordsInput');
+        const saveWordsBtn = document.getElementById('saveWords');
+        const resetWordsBtn = document.getElementById('resetWords');
+        const resetScoreBtn = document.getElementById('resetScore');
+        const closeAdminBtn = document.getElementById('closeAdmin');
+        const bigRocket = document.getElementById('bigRocket');
+
+        // Charger les mots
+        function loadWords() {
+            const savedWords = localStorage.getItem('rocketWords');
+            if (savedWords) {
+                words = JSON.parse(savedWords);
+            } else {
+                words = [...defaultWords];
+            }
+        }
+
+        // Sauvegarder les mots
+        function saveWords(wordList) {
+            words = wordList;
+            localStorage.setItem('rocketWords', JSON.stringify(words));
+        }
+
+        // Charger le score
+        function loadScore() {
+            const savedScore = localStorage.getItem('rocketScore');
+            if (savedScore) {
+                score = parseInt(savedScore);
+                scoreValue.textContent = score;
+            }
+        }
+
+        // Sauvegarder le score
+        function saveScore() {
+            localStorage.setItem('rocketScore', score.toString());
+            scoreValue.textContent = score;
+        }
+
+        // Mélanger un tableau
+        function shuffle(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Charger un nouveau mot
+        function loadNewWord() {
+            if (words.length === 0) {
+                message.textContent = 'Aucun mot disponible!';
+                return;
+            }
+
+            currentWord = words[Math.floor(Math.random() * words.length)];
+            currentSyllables = currentWord.split(',');
+            assembledSyllables = [];
+            message.textContent = '';
+
+            // Afficher l'indice (nombre de syllabes)
+            hintText.textContent = `${currentSyllables.length} syllabe${currentSyllables.length > 1 ? 's' : ''}`;
+
+            // Créer la zone d'assemblage
+            assemblyArea.innerHTML = '';
+            for (let i = 0; i < currentSyllables.length; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'syllable-slot';
+                slot.dataset.index = i;
+                assemblyArea.appendChild(slot);
+            }
+
+            // Créer les fusées-syllabes (mélangées)
+            syllablesContainer.innerHTML = '';
+            const shuffledSyllables = shuffle(currentSyllables.map((syl, idx) => ({ syl, originalIdx: idx })));
+
+            shuffledSyllables.forEach((item, index) => {
+                const rocket = document.createElement('div');
+                rocket.className = 'rocket-syllable';
+                rocket.textContent = item.syl;
+                rocket.dataset.syllable = item.syl;
+                rocket.dataset.shuffleIndex = index;
+                rocket.addEventListener('click', () => selectSyllable(rocket, item.syl, index));
+                syllablesContainer.appendChild(rocket);
+            });
+        }
+
+        // Sélectionner une syllabe
+        function selectSyllable(rocketElement, syllable, shuffleIndex) {
+            if (rocketElement.classList.contains('used')) return;
+
+            // Ajouter la syllabe à l'assemblage
+            assembledSyllables.push(syllable);
+            rocketElement.classList.add('used');
+
+            // Mettre à jour la zone d'assemblage
+            updateAssemblyArea();
+        }
+
+        // Mettre à jour la zone d'assemblage
+        function updateAssemblyArea() {
+            const slots = assemblyArea.querySelectorAll('.syllable-slot');
+            slots.forEach((slot, index) => {
+                if (assembledSyllables[index]) {
+                    slot.textContent = assembledSyllables[index];
+                    slot.classList.add('filled');
+                } else {
+                    slot.textContent = '';
+                    slot.classList.remove('filled');
+                }
+            });
+        }
+
+        // Effacer l'assemblage
+        function clearAssembly() {
+            assembledSyllables = [];
+            updateAssemblyArea();
+
+            // Réactiver toutes les fusées
+            const rockets = syllablesContainer.querySelectorAll('.rocket-syllable');
+            rockets.forEach(rocket => {
+                rocket.classList.remove('used');
+            });
+        }
+
+        // Vérifier la réponse
+        function checkAnswer() {
+            if (assembledSyllables.length !== currentSyllables.length) {
+                showMessage('⚠️ Complète le mot d\'abord!', 'orange');
+                return;
+            }
+
+            const assembledWord = assembledSyllables.join(',');
+
+            if (assembledWord === currentWord) {
+                // Bonne réponse!
+                score += 10;
+                saveScore();
+                showMessage('✓ Bravo! Décollage! 🚀', 'green');
+
+                // Lancer la grosse fusée
+                launchBigRocket();
+
+                // Charger le mot suivant après l'animation
+                setTimeout(() => {
+                    loadNewWord();
+                }, 3500);
+            } else {
+                showMessage('✗ Essaie encore!', 'red');
+            }
+        }
+
+        // Lancer la grosse fusée
+        function launchBigRocket() {
+            bigRocket.classList.add('launching');
+            setTimeout(() => {
+                bigRocket.classList.remove('launching');
+            }, 3000);
+        }
+
+        // Afficher un message
+        function showMessage(text, color) {
+            message.textContent = text;
+            const colors = {
+                green: '#22c55e',
+                red: '#ef4444',
+                orange: '#f59e0b'
+            };
+            message.style.color = colors[color] || '#2c3e50';
+            if (color !== 'green') {
+                setTimeout(() => {
+                    message.textContent = '';
+                }, 2000);
+            }
+        }
+
+        // Event listeners
+        checkBtn.addEventListener('click', checkAnswer);
+        clearBtn.addEventListener('click', clearAssembly);
+        nextBtn.addEventListener('click', loadNewWord);
+
+        // Panneau d'administration
+        adminToggle.addEventListener('click', () => {
+            adminPanel.classList.toggle('visible');
+            if (adminPanel.classList.contains('visible')) {
+                wordsInput.value = words.join('\n');
+            }
+        });
+
+        closeAdminBtn.addEventListener('click', () => {
+            adminPanel.classList.remove('visible');
+        });
+
+        // Sauvegarder les nouveaux mots
+        saveWordsBtn.addEventListener('click', () => {
+            const newWords = wordsInput.value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0 && line.includes(','));
+
+            if (newWords.length >= 5) {
+                saveWords(newWords);
+                loadNewWord();
+                adminPanel.classList.remove('visible');
+                alert('Liste sauvegardée!');
+            } else {
+                alert('Veuillez entrer au moins 5 mots avec syllabes.');
+            }
+        });
+
+        // Réinitialiser aux mots par défaut
+        resetWordsBtn.addEventListener('click', () => {
+            if (confirm('Voulez-vous vraiment réinitialiser la liste aux mots par défaut?')) {
+                saveWords([...defaultWords]);
+                wordsInput.value = words.join('\n');
+                loadNewWord();
+                alert('Liste réinitialisée!');
+            }
+        });
+
+        // Réinitialiser le score
+        resetScoreBtn.addEventListener('click', () => {
+            if (confirm('Voulez-vous vraiment réinitialiser le score?')) {
+                score = 0;
+                saveScore();
+                alert('Score réinitialisé!');
+            }
+        });
+
+        // Initialisation
+        loadWords();
+        loadScore();
+        loadNewWord();
+    </script>
+</body>
+</html>
