@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memory - Jeux Éducatifs</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         @font-face {
             font-family: 'OpenDyslexic';
@@ -356,6 +357,7 @@
         let moves = 0;
         let score = 0;
         let canFlip = true;
+        let mismatchTimeout = null;
 
         // Récupérer les éléments
         const memoryGrid = document.getElementById('memoryGrid');
@@ -476,8 +478,20 @@
 
         // Retourner une carte
         function flipCard(card, index) {
-            if (!canFlip) return;
             if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+            // Si on a 2 cartes retournées qui ne matchent pas, annuler le timeout et les retourner immédiatement
+            if (flippedCards.length === 2 && mismatchTimeout) {
+                clearTimeout(mismatchTimeout);
+                mismatchTimeout = null;
+                const [card1, card2] = flippedCards;
+                card1.card.classList.remove('flipped');
+                card2.card.classList.remove('flipped');
+                flippedCards = [];
+                canFlip = true;
+            }
+
+            if (!canFlip) return;
             if (flippedCards.length >= 2) return;
 
             card.classList.add('flipped');
@@ -508,6 +522,13 @@
                     score += pointsEarned;
                     saveScore();
 
+                    // Explosion de confettis!
+                    confetti({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+
                     showMessage(`✓ Bravo! +${pointsEarned} points`, 'green');
 
                     flippedCards = [];
@@ -517,16 +538,23 @@
                     if (matchedPairs === symbols.length) {
                         setTimeout(() => {
                             showMessage(`🎉 Partie terminée en ${moves} coups!`, 'green');
+                            // Encore plus de confettis pour la fin!
+                            confetti({
+                                particleCount: 200,
+                                spread: 100,
+                                origin: { y: 0.6 }
+                            });
                         }, 500);
                     }
                 }, 500);
             } else {
                 // Pas de correspondance
-                setTimeout(() => {
+                mismatchTimeout = setTimeout(() => {
                     card1.card.classList.remove('flipped');
                     card2.card.classList.remove('flipped');
                     flippedCards = [];
                     canFlip = true;
+                    mismatchTimeout = null;
                 }, 6000);
             }
         }
