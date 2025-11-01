@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Associe les Calculs - Jeux Éducatifs</title>
+    <script type="module">
+        import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
+        window.CreateMLCEngine = CreateMLCEngine;
+    </script>
     <style>
         @font-face {
             font-family: 'OpenDyslexic';
@@ -255,6 +259,32 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
             min-height: 30px;
         }
+
+        .llm-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #4a5568;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 999;
+            max-width: 250px;
+        }
+
+        .llm-status.loading {
+            color: #f59e0b;
+        }
+
+        .llm-status.ready {
+            color: #22c55e;
+        }
+
+        .llm-status.error {
+            color: #ef4444;
+        }
     </style>
 </head>
 <body>
@@ -303,6 +333,7 @@
     </div>
 
     <div class="message" id="message"></div>
+    <div class="llm-status" id="llmStatus">🤖 Initialisation...</div>
 
     <script>
         // Calculs par défaut
@@ -334,6 +365,86 @@
         const resetMathBtn = document.getElementById('resetMath');
         const resetScoreBtn = document.getElementById('resetScore');
         const closeAdminBtn = document.getElementById('closeAdmin');
+        const llmStatus = document.getElementById('llmStatus');
+
+        // Variables LLM
+        let engine = null;
+        let llmReady = false;
+
+        // Initialiser le LLM
+        async function initLLM() {
+            try {
+                console.log('🤖 [LLM] Démarrage de l\'initialisation...');
+                llmStatus.textContent = '🤖 Chargement du modèle...';
+                llmStatus.className = 'llm-status loading';
+
+                // Créer l'engine avec un petit modèle
+                console.log('🤖 [LLM] Création de l\'engine Phi-2...');
+                engine = await window.CreateMLCEngine("Phi-2-q4f16_1-MLC", {
+                    initProgressCallback: (progress) => {
+                        const percent = Math.round(progress.progress * 100);
+                        llmStatus.textContent = `🤖 Chargement: ${percent}%`;
+                        console.log(`🤖 [LLM] Progression: ${percent}%`);
+                    }
+                });
+
+                llmReady = true;
+                console.log('🤖 [LLM] ✅ Modèle chargé et prêt!');
+                llmStatus.textContent = '🤖 Prêt à encourager!';
+                llmStatus.className = 'llm-status ready';
+
+                // Test immédiat
+                console.log('🤖 [LLM] Test de génération...');
+                const testMsg = await generateEncouragement();
+                console.log('🤖 [LLM] Message de test:', testMsg);
+
+                // Cacher après 5 secondes
+                setTimeout(() => {
+                    llmStatus.style.display = 'none';
+                }, 5000);
+            } catch (error) {
+                console.error('🤖 [LLM] ❌ Erreur:', error);
+                console.error('🤖 [LLM] Détails:', error.message);
+                llmStatus.textContent = '🤖 Mode sans IA';
+                llmStatus.className = 'llm-status error';
+                setTimeout(() => {
+                    llmStatus.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Générer une phrase d'encouragement avec le LLM
+        async function generateEncouragement() {
+            if (!llmReady || !engine) {
+                console.log('🤖 [LLM] Non disponible, utilisation du fallback');
+                return ['Bravo!', 'Excellent!', 'Super!', 'Parfait!', 'Bien joué!'][Math.floor(Math.random() * 5)];
+            }
+
+            try {
+                console.log('🤖 [LLM] Génération d\'encouragement...');
+                const response = await engine.chat.completions.create({
+                    messages: [
+                        {
+                            role: "system",
+                            content: "Tu es un assistant qui encourage les enfants qui font des maths. Réponds UNIQUEMENT par une courte phrase d'encouragement en français (maximum 8 mots). Sois joyeux et positif."
+                        },
+                        {
+                            role: "user",
+                            content: "L'enfant vient de réussir un calcul!"
+                        }
+                    ],
+                    temperature: 1.2,
+                    max_tokens: 20
+                });
+
+                const encouragement = response.choices[0]?.message?.content?.trim() || 'Bravo!';
+                console.log('🤖 [LLM] ✅ Généré:', encouragement);
+                return encouragement;
+            } catch (error) {
+                console.error('🤖 [LLM] ❌ Erreur génération:', error);
+                return 'Bravo!';
+            }
+        }
 
         // Charger les calculs
         function loadMath() {
@@ -430,7 +541,7 @@
         }
 
         // Vérifier la correspondance
-        function checkMatch() {
+        async function checkMatch() {
             const calcValue = selectedCalculation.dataset.value;
             const resultValue = selectedResult.dataset.value;
 
@@ -444,7 +555,10 @@
 
                 score++;
                 saveScore();
-                showMessage('✓ Bravo!', 'green');
+
+                // Générer un encouragement avec le LLM
+                const encouragement = await generateEncouragement();
+                showMessage('✓ ' + encouragement, 'green');
 
                 // Faire disparaître les éléments après l'animation
                 setTimeout(() => {
@@ -593,6 +707,7 @@
         loadMath();
         loadScore();
         generateGame();
+        initLLM();
     </script>
 </body>
 </html>
