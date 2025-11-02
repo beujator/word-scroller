@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dictée - Jeux Éducatifs</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         @font-face {
             font-family: 'OpenDyslexic';
@@ -373,6 +374,65 @@
             color: #4a5568;
         }
 
+        .big-rocket {
+            position: fixed;
+            bottom: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 120px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .big-rocket.flying {
+            animation: flyRocket 3s ease-out forwards;
+        }
+
+        @keyframes flyRocket {
+            0% {
+                bottom: -200px;
+                opacity: 1;
+            }
+            100% {
+                bottom: 120vh;
+                opacity: 0;
+            }
+        }
+
+        .encouragement {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #22c55e;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            z-index: 9998;
+            pointer-events: none;
+            opacity: 0;
+            animation: showEncouragement 2s ease-out forwards;
+        }
+
+        @keyframes showEncouragement {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            80% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+        }
+
         @media (max-width: 768px) {
             .game-container {
                 min-width: 300px;
@@ -483,6 +543,20 @@
         const synth = window.speechSynthesis;
         let voiceFR = null;
 
+        // Messages d'encouragement
+        const encouragementMessages = [
+            'Bravo ! 🌟',
+            'Super ! 🎉',
+            'Excellent ! 👏',
+            'Génial ! ⭐',
+            'Parfait ! 💫',
+            'Magnifique ! 🎊',
+            'Fantastique ! 🏆',
+            'Incroyable ! 🌈',
+            'Continue ! 💪',
+            'Tu assures ! 🚀'
+        ];
+
         // Récupérer les éléments
         const gameContainer = document.getElementById('gameContainer');
         const results = document.getElementById('results');
@@ -507,6 +581,7 @@
         const closeAdminBtn = document.getElementById('closeAdmin');
         const onlineListSelect = document.getElementById('onlineList');
         const listStatus = document.getElementById('listStatus');
+        const bigRocket = document.getElementById('bigRocket');
 
         // API pour les listes en ligne
         const API_BASE = window.location.origin + '/api/lists';
@@ -628,6 +703,30 @@
             synth.speak(utterance);
         }
 
+        // Afficher un message d'encouragement aléatoire
+        function showEncouragement() {
+            const message = encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)];
+            const encouragementEl = document.createElement('div');
+            encouragementEl.className = 'encouragement';
+            encouragementEl.textContent = message;
+            document.body.appendChild(encouragementEl);
+
+            setTimeout(() => {
+                encouragementEl.remove();
+            }, 2000);
+        }
+
+        // Lancer la fusée
+        function launchRocket() {
+            bigRocket.classList.remove('flying');
+            void bigRocket.offsetWidth; // Force reflow
+            bigRocket.classList.add('flying');
+
+            setTimeout(() => {
+                bigRocket.classList.remove('flying');
+            }, 3000);
+        }
+
         // Vérifier la réponse
         function checkAnswer() {
             const userAnswer = wordInput.value.trim();
@@ -646,6 +745,15 @@
                 feedback.className = 'feedback correct';
                 score++;
                 saveScore();
+
+                // Animations de célébration
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+                showEncouragement();
+                launchRocket();
             } else {
                 wordInput.className = 'word-input incorrect';
                 feedback.textContent = '✗ Incorrect';
@@ -829,5 +937,7 @@
         startDictee();
         loadOnlineLists();
     </script>
+
+    <div class="big-rocket" id="bigRocket">🚀</div>
 </body>
 </html>
