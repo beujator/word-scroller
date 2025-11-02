@@ -195,6 +195,22 @@
             text-align: center;
         }
 
+        .ios-info {
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #667eea;
+            font-size: 14px;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .ios-info.visible {
+            display: block;
+        }
+
         .word-counter {
             font-size: 18px;
             color: #6b7280;
@@ -482,6 +498,11 @@
 
     <h1>🎤 Dictée</h1>
 
+    <div class="ios-info" id="iosInfo">
+        📱 <strong>Sur iPhone/iPad :</strong> Clique sur le bouton 🔊 pour écouter chaque mot.
+        Vérifie que le son n'est pas coupé (vérifier le bouton latéral).
+    </div>
+
     <div class="list-selector" id="listSelector">
         <label for="onlineList">Liste de mots: </label>
         <select id="onlineList">
@@ -543,6 +564,9 @@
         const synth = window.speechSynthesis;
         let voiceFR = null;
 
+        // Détecter iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
         // Messages d'encouragement
         const encouragementMessages = [
             'Bravo ! 🌟',
@@ -589,13 +613,29 @@
         // Initialiser les voix
         function loadVoices() {
             const voices = synth.getVoices();
-            voiceFR = voices.find(voice => voice.lang.startsWith('fr')) || voices[0];
+
+            if (isIOS) {
+                // Sur iOS, préférer les voix françaises de qualité
+                voiceFR = voices.find(voice => voice.lang === 'fr-FR' && voice.name.includes('Thomas')) ||
+                          voices.find(voice => voice.lang === 'fr-FR') ||
+                          voices.find(voice => voice.lang.startsWith('fr')) ||
+                          voices[0];
+            } else {
+                voiceFR = voices.find(voice => voice.lang.startsWith('fr')) || voices[0];
+            }
+
+            console.log('Voix sélectionnée:', voiceFR ? voiceFR.name : 'Aucune');
         }
 
         // Charger les voix au démarrage
         loadVoices();
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        // Sur iOS, charger les voix après un délai
+        if (isIOS) {
+            setTimeout(loadVoices, 500);
         }
 
         // Charger les mots
@@ -677,13 +717,23 @@
             correctWord.textContent = '';
             correctWord.classList.remove('visible');
 
-            // Dire le mot automatiquement
-            setTimeout(() => speakWord(), 500);
+            // Sur iOS, ne pas lire automatiquement (nécessite interaction utilisateur)
+            if (!isIOS) {
+                setTimeout(() => speakWord(), 500);
+            } else {
+                feedback.textContent = '👆 Clique sur le haut-parleur pour écouter';
+                feedback.className = 'feedback';
+            }
         }
 
         // Dire le mot
         function speakWord() {
             if (isSpeaking) return;
+
+            // Sur iOS, annuler toute synthèse en cours (workaround)
+            if (isIOS) {
+                synth.cancel();
+            }
 
             isSpeaking = true;
             speakBtn.classList.add('speaking');
@@ -691,6 +741,8 @@
             const utterance = new SpeechSynthesisUtterance(currentWord);
             utterance.lang = 'fr-FR';
             utterance.rate = 0.8;
+            utterance.volume = 1.0;
+
             if (voiceFR) {
                 utterance.voice = voiceFR;
             }
@@ -700,7 +752,25 @@
                 speakBtn.classList.remove('speaking');
             };
 
-            synth.speak(utterance);
+            utterance.onerror = (e) => {
+                console.error('Erreur de synthèse vocale:', e);
+                isSpeaking = false;
+                speakBtn.classList.remove('speaking');
+
+                if (isIOS) {
+                    feedback.textContent = '⚠️ Problème audio. Vérifie que le son n\'est pas coupé.';
+                    feedback.className = 'feedback';
+                }
+            };
+
+            // Sur iOS, petit délai pour que ça fonctionne mieux
+            if (isIOS) {
+                setTimeout(() => {
+                    synth.speak(utterance);
+                }, 100);
+            } else {
+                synth.speak(utterance);
+            }
         }
 
         // Afficher un message d'encouragement aléatoire
@@ -930,6 +1000,11 @@
                 alert('Score réinitialisé!');
             }
         });
+
+        // Afficher le bandeau iOS si nécessaire
+        if (isIOS) {
+            document.getElementById('iosInfo').classList.add('visible');
+        }
 
         // Initialisation
         loadWords();
