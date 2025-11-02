@@ -1,2 +1,8 @@
 name = "word-scroller"
 compatibility_date = "2024-01-01"
+
+# KV namespace pour stocker les listes de mots en ligne
+[[kv_namespaces]]
+binding = "WORD_LISTS"
+id = "0de1bcbff6c54a6d8968b5647ff23038"
+preview_id = "8c337cf25bda4a97856685f7f45a6da6"

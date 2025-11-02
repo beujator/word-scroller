@@ -350,6 +350,53 @@
                 height: 80px;
                 font-size: 24px;
             }
+
+            .list-selector {
+                display: block;
+            }
+
+            .list-selector select {
+                min-width: 200px;
+                display: block;
+                margin: 10px auto;
+            }
+        }
+
+        .list-selector {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .list-selector label {
+            color: #2c3e50;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .list-selector select {
+            padding: 8px 15px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-family: 'OpenDyslexic', 'Arial', sans-serif;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            min-width: 250px;
+        }
+
+        .list-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .list-status {
+            margin-left: 10px;
+            font-size: 14px;
+            color: #6b7280;
         }
     </style>
 </head>
@@ -374,6 +421,14 @@
     </div>
 
     <h1>🚀 La Fusée des Syllabes</h1>
+
+    <div class="list-selector" id="listSelector">
+        <label for="onlineList">Liste de mots: </label>
+        <select id="onlineList">
+            <option value="">📱 Liste locale (personnalisée)</option>
+        </select>
+        <span id="listStatus" class="list-status"></span>
+    </div>
 
     <div class="score">
         Score: <span id="scoreValue">0</span>
@@ -431,6 +486,11 @@
         const resetScoreBtn = document.getElementById('resetScore');
         const closeAdminBtn = document.getElementById('closeAdmin');
         const bigRocket = document.getElementById('bigRocket');
+        const onlineListSelect = document.getElementById('onlineList');
+        const listStatus = document.getElementById('listStatus');
+
+        // API pour les listes en ligne
+        const API_BASE = window.location.origin + '/api/lists';
 
         // Charger les mots
         function loadWords() {
@@ -601,6 +661,81 @@
             }
         }
 
+        // Charger les listes en ligne disponibles
+        async function loadOnlineLists() {
+            try {
+                const response = await fetch(API_BASE);
+                const data = await response.json();
+
+                if (data.success && data.lists.length > 0) {
+                    // Filtrer les listes pour ce jeu (rocket ou all)
+                    const rocketLists = data.lists.filter(list =>
+                        list.game === 'rocket' || list.game === 'all'
+                    );
+
+                    rocketLists.forEach(list => {
+                        const option = document.createElement('option');
+                        option.value = list.name;
+                        option.textContent = `☁️ ${list.name} (${list.wordCount} mots)`;
+                        onlineListSelect.appendChild(option);
+                    });
+
+                    listStatus.textContent = `${rocketLists.length} liste(s) en ligne`;
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement des listes:', error);
+                listStatus.textContent = '⚠️ Hors ligne';
+            }
+        }
+
+        // Charger une liste en ligne spécifique
+        async function loadOnlineList(listName) {
+            try {
+                listStatus.textContent = '⏳ Chargement...';
+                const response = await fetch(`${API_BASE}/${encodeURIComponent(listName)}`);
+                const data = await response.json();
+
+                if (data.success && data.list.words) {
+                    words = data.list.words;
+                    loadNewWord();
+                    listStatus.textContent = '✓ Liste chargée';
+
+                    setTimeout(() => {
+                        listStatus.textContent = '';
+                    }, 2000);
+                } else {
+                    listStatus.textContent = '❌ Erreur de chargement';
+                    setTimeout(() => {
+                        onlineListSelect.value = '';
+                        loadWords();
+                        loadNewWord();
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                listStatus.textContent = '❌ Erreur de connexion';
+                setTimeout(() => {
+                    onlineListSelect.value = '';
+                    loadWords();
+                    loadNewWord();
+                }, 2000);
+            }
+        }
+
+        // Gérer le changement de sélection de liste
+        onlineListSelect.addEventListener('change', (e) => {
+            const selectedList = e.target.value;
+            if (selectedList) {
+                // Charger la liste en ligne
+                loadOnlineList(selectedList);
+            } else {
+                // Utiliser la liste locale
+                loadWords();
+                loadNewWord();
+                listStatus.textContent = '';
+            }
+        });
+
         // Event listeners
         checkBtn.addEventListener('click', checkAnswer);
         clearBtn.addEventListener('click', clearAssembly);
@@ -658,6 +793,7 @@
         loadWords();
         loadScore();
         loadNewWord();
+        loadOnlineLists(); // Charger les listes en ligne disponibles
     </script>
 </body>
 </html>
