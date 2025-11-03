@@ -768,10 +768,7 @@
 
         // Charger le mot suivant
         function loadNextWord() {
-            console.log('loadNextWord() appelé - currentIndex:', currentIndex, 'currentWords.length:', currentWords.length);
-
             if (currentIndex >= currentWords.length) {
-                console.log('Fin de la dictée - affichage des résultats');
                 showResults();
                 return;
             }
@@ -782,7 +779,6 @@
             speakBtn.classList.remove('speaking');
 
             currentWord = currentWords[currentIndex];
-            console.log('Nouveau mot:', currentWord);
             wordCounter.textContent = `Mot ${currentIndex + 1} sur ${currentWords.length}`;
             wordInput.value = '';
             wordInput.className = 'word-input';
@@ -797,7 +793,6 @@
 
             // Générer la silhouette du mot
             generateSilhouette(currentWord);
-            console.log('Silhouette générée pour:', currentWord);
 
             // Sur iOS, ne pas lire automatiquement (nécessite interaction utilisateur)
             if (!isIOS) {
@@ -883,7 +878,6 @@
         function checkAnswer() {
             // Éviter les appels multiples
             if (isCheckingAnswer) {
-                console.log('checkAnswer déjà en cours, ignoré');
                 return;
             }
 
@@ -896,11 +890,9 @@
             }
 
             isCheckingAnswer = true;
-            console.log('checkAnswer - Vérification:', userAnswer, 'vs', currentWord);
             const isCorrect = normalizeText(userAnswer) === normalizeText(currentWord);
 
             if (isCorrect) {
-                console.log('Réponse correcte ! Préparation du passage au mot suivant...');
                 wordInput.className = 'word-input correct';
                 feedback.textContent = '✓ Correct ! Mot suivant dans 2 secondes...';
                 feedback.className = 'feedback correct';
@@ -923,9 +915,7 @@
                 nextBtn.disabled = true;
 
                 // Passer automatiquement au mot suivant après 2 secondes
-                console.log('setTimeout créé, exécution dans 2 secondes...');
                 setTimeout(() => {
-                    console.log('setTimeout exécuté ! Appel de nextWord()...');
                     isCheckingAnswer = false;
                     nextWord();
                 }, 2000);
@@ -951,9 +941,7 @@
 
         // Mot suivant
         function nextWord() {
-            console.log('nextWord() appelé - currentIndex:', currentIndex);
             currentIndex++;
-            console.log('currentIndex incrémenté à:', currentIndex);
             loadNextWord();
         }
 
