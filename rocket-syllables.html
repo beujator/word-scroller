@@ -523,13 +523,26 @@
             scoreValue.textContent = score;
         }
 
-        // Mélanger un tableau
+        // Mélanger un tableau en garantissant que l'ordre est différent de l'original
         function shuffle(array) {
-            const shuffled = [...array];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            // Pour un seul élément, pas besoin de mélanger
+            if (array.length <= 1) return [...array];
+
+            let shuffled;
+            let isDifferent = false;
+
+            // Continuer à mélanger jusqu'à ce que l'ordre soit différent
+            while (!isDifferent) {
+                shuffled = [...array];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+
+                // Vérifier si l'ordre est différent de l'original
+                isDifferent = array.some((item, index) => item !== shuffled[index]);
             }
+
             return shuffled;
         }
 
