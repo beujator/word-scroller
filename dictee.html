@@ -592,6 +592,7 @@
         let score = 0;
         let mistakes = [];
         let isSpeaking = false;
+        let isCheckingAnswer = false;
 
         // Synthèse vocale
         const synth = window.speechSynthesis;
@@ -873,6 +874,11 @@
 
         // Vérifier la réponse
         function checkAnswer() {
+            // Éviter les appels multiples
+            if (isCheckingAnswer) {
+                return;
+            }
+
             const userAnswer = wordInput.value.trim();
 
             if (!userAnswer) {
@@ -881,6 +887,7 @@
                 return;
             }
 
+            isCheckingAnswer = true;
             const isCorrect = normalizeText(userAnswer) === normalizeText(currentWord);
 
             if (isCorrect) {
@@ -907,6 +914,7 @@
 
                 // Passer automatiquement au mot suivant après 2 secondes
                 setTimeout(() => {
+                    isCheckingAnswer = false;
                     nextWord();
                 }, 2000);
             } else {
@@ -925,6 +933,7 @@
                 wordInput.disabled = true;
                 checkBtn.disabled = true;
                 nextBtn.disabled = false;
+                isCheckingAnswer = false;
             }
         }
 
@@ -1034,7 +1043,8 @@
 
         // Permettre la validation avec Entrée
         wordInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !checkBtn.disabled) {
+            if (e.key === 'Enter' && !checkBtn.disabled && !wordInput.disabled) {
+                e.preventDefault();
                 checkAnswer();
             }
         });
