@@ -252,6 +252,37 @@
             }
         }
 
+        .word-silhouette {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 4px;
+            margin: 30px 0;
+            min-height: 80px;
+            padding: 10px;
+        }
+
+        .letter-box {
+            width: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .letter-box.normal {
+            height: 40px;
+        }
+
+        .letter-box.ascender {
+            height: 60px;
+            margin-bottom: 0;
+        }
+
+        .letter-box.descender {
+            height: 60px;
+            margin-top: 20px;
+        }
+
         .input-container {
             margin-bottom: 20px;
         }
@@ -520,6 +551,8 @@
 
         <button class="audio-button" id="speakBtn" title="Cliquez pour écouter le mot">🔊</button>
 
+        <div class="word-silhouette" id="wordSilhouette"></div>
+
         <div class="input-container">
             <input type="text" class="word-input" id="wordInput" placeholder="Écris le mot ici..." autocomplete="off">
         </div>
@@ -586,6 +619,7 @@
         const results = document.getElementById('results');
         const wordCounter = document.getElementById('wordCounter');
         const speakBtn = document.getElementById('speakBtn');
+        const wordSilhouette = document.getElementById('wordSilhouette');
         const wordInput = document.getElementById('wordInput');
         const checkBtn = document.getElementById('checkBtn');
         const nextBtn = document.getElementById('nextBtn');
@@ -687,6 +721,38 @@
                 .replace(/[^a-z0-9]/g, '');
         }
 
+        // Générer la silhouette d'un mot
+        function generateSilhouette(word) {
+            // Lettres ascendantes (dépassent en haut)
+            const ascenders = 'bdfhkltéè';
+            // Lettres descendantes (dépassent en bas)
+            const descenders = 'gjpqy';
+
+            wordSilhouette.innerHTML = '';
+
+            const normalizedWord = word.toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
+
+            for (let char of normalizedWord) {
+                // Ignorer les espaces et caractères spéciaux
+                if (char === ' ' || !/[a-z]/.test(char)) continue;
+
+                const box = document.createElement('div');
+                box.className = 'letter-box';
+
+                if (ascenders.includes(char)) {
+                    box.classList.add('ascender');
+                } else if (descenders.includes(char)) {
+                    box.classList.add('descender');
+                } else {
+                    box.classList.add('normal');
+                }
+
+                wordSilhouette.appendChild(box);
+            }
+        }
+
         // Démarrer une nouvelle dictée
         function startDictee() {
             currentWords = shuffle(words);
@@ -716,6 +782,9 @@
             feedback.className = 'feedback';
             correctWord.textContent = '';
             correctWord.classList.remove('visible');
+
+            // Générer la silhouette du mot
+            generateSilhouette(currentWord);
 
             // Sur iOS, ne pas lire automatiquement (nécessite interaction utilisateur)
             if (!isIOS) {
