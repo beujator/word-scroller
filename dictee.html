@@ -770,6 +770,11 @@
                 return;
             }
 
+            // Annuler toute synthèse vocale en cours
+            synth.cancel();
+            isSpeaking = false;
+            speakBtn.classList.remove('speaking');
+
             currentWord = currentWords[currentIndex];
             wordCounter.textContent = `Mot ${currentIndex + 1} sur ${currentWords.length}`;
             wordInput.value = '';
@@ -896,6 +901,7 @@
 
                 // Désactiver tous les contrôles pendant la transition
                 wordInput.disabled = true;
+                wordInput.blur(); // Enlever le focus pour éviter les interférences
                 checkBtn.disabled = true;
                 nextBtn.disabled = true;
 
