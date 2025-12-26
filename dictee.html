@@ -647,23 +647,6 @@
         // API pour les listes en ligne
         const API_BASE = window.location.origin + '/api/lists';
 
-        // Initialiser les voix
-        function loadVoices() {
-            const voices = synth.getVoices();
-
-            if (isIOS) {
-                // Sur iOS, préférer les voix françaises de qualité
-                voiceFR = voices.find(voice => voice.lang === 'fr-FR' && voice.name.includes('Thomas')) ||
-                          voices.find(voice => voice.lang === 'fr-FR') ||
-                          voices.find(voice => voice.lang.startsWith('fr')) ||
-                          voices[0];
-            } else {
-                voiceFR = voices.find(voice => voice.lang.startsWith('fr')) || voices[0];
-            }
-
-            console.log('Voix sélectionnée:', voiceFR ? voiceFR.name : 'Aucune');
-        }
-
         // Charger les voix au démarrage
         loadVoices();
         if (speechSynthesis.onvoiceschanged !== undefined) {
@@ -803,51 +786,88 @@
             }
         }
 
-        // Dire le mot
-        function speakWord() {
-            if (isSpeaking) return;
+        // Trouver la meilleure voix française
+        function getBestFrenchVoice() {
+          console.log(speechSynthesis.getVoices().filter(v => v.lang.startsWith('fr')).map(v => v.name)
+          )
+          const voices = synth.getVoices();
 
-            // Sur iOS, annuler toute synthèse en cours (workaround)
-            if (isIOS) {
-                synth.cancel();
+          // Voix premium iOS (plus naturelles)
+          const premiumVoices = ['Thomas', 'Amelie', 'Audrey'];
+
+          for (const name of premiumVoices) {
+            const voice = voices.find(v =>
+              v.lang.startsWith('fr') && v.name.includes(name)
+            );
+            if (voice) {
+              console.log('Voix premium trouvée:', voice.name);
+              return voice;
+            }
+          }
+
+          // Fallback : n'importe quelle voix française
+          const fallback = voices.find(v => v.lang === 'fr-FR') ||
+            voices.find(v => v.lang.startsWith('fr'));
+
+          console.log('Voix fallback:', fallback?.name || 'Aucune');
+          return fallback;
+        }
+
+        function loadVoices() {
+          const voices = synth.getVoices();
+
+          // Chercher Audrey de qualité (premium)
+          voiceFR = voices.find(v => v.voiceURI.includes('premium.fr-FR.Audrey')) ||
+            voices.find(v => v.voiceURI.includes('premium') && v.lang.startsWith('fr')) ||
+            voices.find(v => v.name === 'Audrey') ||
+            voices.find(v => v.name === 'Thomas') ||
+            voices.find(v => v.lang.startsWith('fr'));
+
+          console.log('Voix sélectionnée:', voiceFR?.name, voiceFR?.voiceURI);
+        }
+
+        // Dire le mot
+        // Remplacer la fonction speakWord par cette version :
+        function speakWord() {
+          // iOS fix : toujours annuler avant de parler
+          synth.cancel();
+
+          // Attendre que cancel soit effectif
+          setTimeout(() => {
+            const utterance = new SpeechSynthesisUtterance(currentWord);
+
+            // Recharger les voix (iOS bug fix)
+            const voices = synth.getVoices();
+            const frenchVoice = voices.find(v => v.lang === 'fr-FR') ||
+              voices.find(v => v.lang.startsWith('fr'));
+
+            if (frenchVoice) {
+              utterance.voice = frenchVoice;
             }
 
-            isSpeaking = true;
             speakBtn.classList.add('speaking');
 
-            const utterance = new SpeechSynthesisUtterance(currentWord);
-            utterance.lang = 'fr-FR';
-            utterance.rate = 0.8;
-            utterance.volume = 1.0;
-
-            if (voiceFR) {
-                utterance.voice = voiceFR;
-            }
-
             utterance.onend = () => {
-                isSpeaking = false;
-                speakBtn.classList.remove('speaking');
+              speakBtn.classList.remove('speaking');
             };
 
             utterance.onerror = (e) => {
-                console.error('Erreur de synthèse vocale:', e);
-                isSpeaking = false;
-                speakBtn.classList.remove('speaking');
-
-                if (isIOS) {
-                    feedback.textContent = '⚠️ Problème audio. Vérifie que le son n\'est pas coupé.';
-                    feedback.className = 'feedback';
-                }
+              console.error('Erreur vocale:', e);
+              speakBtn.classList.remove('speaking');
+              feedback.textContent = '⚠️ Erreur audio. Réessaie ou vérifie le son.';
             };
 
-            // Sur iOS, petit délai pour que ça fonctionne mieux
+            synth.speak(utterance);
+
+            // iOS fix : forcer le démarrage (bug où speak() ne démarre pas)
             if (isIOS) {
-                setTimeout(() => {
-                    synth.speak(utterance);
-                }, 100);
-            } else {
-                synth.speak(utterance);
+              setTimeout(() => {
+                if (synth.paused) {
+                  synth.resume();
+                }
+              }, 100);
             }
+          }, isIOS ? 300 : 50);
         }
 
         // Afficher un message d'encouragement aléatoire
