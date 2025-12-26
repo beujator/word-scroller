@@ -447,11 +447,12 @@
               symbolFullList = [...defaultSymbols];
             }
             symbols = symbolFullList.slice(0,10);
+            console.log(symbols.length)
         }
 
         // Sauvegarder les symboles
         function saveSymbols(symbolList) {
-            symbols = symbolList;
+            symbols = symbolList.slice(0,10);
             localStorage.setItem('memorySymbols', JSON.stringify(symbols));
         }
 
@@ -696,7 +697,7 @@
                 const data = await response.json();
 
                 if (data.success && data.list.words) {
-                    symbols = data.list.words;
+                    symbols = data.list.words.slice(0,10);
                     createBoard();
                     listStatus.textContent = '✓ Liste chargée';
 
