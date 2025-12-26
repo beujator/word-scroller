@@ -321,7 +321,7 @@
 
     <div class="speed-control">
         <label>Vitesse:</label>
-        <input type="range" id="speedRange" min="1" max="50" value="15">
+        <input type="range" id="speedRange" min="1" max="20" value="1">
         <span id="speedValue">1x</span>
     </div>
 
@@ -408,21 +408,23 @@
 
         // Mettre à jour la vitesse d'animation
         function updateSpeed(speed) {
-            // Convertir le slider (1-50) en durée (600s à 10s)
-            // Plus le slider est élevé, plus c'est rapide (durée courte)
-            // Utilisation d'une courbe pour avoir plus de contrôle aux vitesses lentes
-            const duration = 610 - (speed * 12);
-            scrollContent.style.animationDuration = duration + 's';
+          // Vitesse en pixels par seconde (ajustable)
+          const pixelsPerSecond = speed * 20; // de 20 à 1000 px/s
 
-            // Afficher le multiplicateur de vitesse
-            const speedMultiplier = (15 / speed).toFixed(1);
-            speedValue.textContent = speedMultiplier + 'x';
+          // Calculer la largeur réelle du contenu
+          const contentWidth = scrollContent.scrollWidth / 2; // /2 car on défile de 50%
 
-            // Forcer le redémarrage de l'animation
-            scrollContent.style.animation = 'none';
-            setTimeout(() => {
-                scrollContent.style.animation = `scroll ${duration}s linear infinite`;
-            }, 10);
+          // Durée = distance / vitesse
+          const duration = contentWidth / pixelsPerSecond;
+
+          scrollContent.style.animationDuration = duration + 's';
+          speedValue.textContent = speed + 'x';
+
+          // Redémarrer l'animation
+          scrollContent.style.animation = 'none';
+          setTimeout(() => {
+            scrollContent.style.animation = `scroll ${duration}s linear infinite`;
+          }, 10);
         }
 
         // Pause/Play
