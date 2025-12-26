@@ -440,11 +440,13 @@
         // Charger les symboles
         function loadSymbols() {
             const savedSymbols = localStorage.getItem('memorySymbols');
+            let symbolFullList;
             if (savedSymbols) {
-                symbols = JSON.parse(savedSymbols);
+              symbolFullList = JSON.parse(savedSymbols);
             } else {
-                symbols = [...defaultSymbols];
+              symbolFullList = [...defaultSymbols];
             }
+            symbols = symbolFullList.slice(0,10);
         }
 
         // Sauvegarder les symboles
