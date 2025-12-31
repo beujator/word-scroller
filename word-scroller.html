@@ -344,10 +344,10 @@
           let currentIndex = array.length;
 
           // While there remain elements to shuffle...
-          while (currentIndex != 0) {
+          while (currentIndex !== 0) {
 
             // Pick a remaining element...
-            let randomIndex = Math.floor(Math.random() * currentIndex);
+            const randomIndex = Math.floor(Math.random() * currentIndex);
             currentIndex--;
 
             // And swap it with the current element.
@@ -392,7 +392,7 @@
         let isPaused = false;
 
         // API pour les listes en ligne
-        const API_BASE = window.location.origin + '/api/lists';
+        const API_BASE = `${window.location.origin}/api/lists`;
 
         // Générer le contenu (dupliquer les mots pour un défilement continu)
         function generateContent() {
@@ -435,8 +435,8 @@
           // Durée = distance / vitesse
           const duration = contentWidth / pixelsPerSecond;
 
-          scrollContent.style.animationDuration = duration + 's';
-          speedValue.textContent = speed + 'x';
+          scrollContent.style.animationDuration = `${duration}s`;
+          speedValue.textContent = `${speed}x`;
 
           // Redémarrer l'animation
           scrollContent.style.animation = 'none';
