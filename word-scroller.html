@@ -317,6 +317,7 @@
     <div class="controls">
         <button id="pauseBtn">Pause</button>
         <button id="resetBtn">Réinitialiser</button>
+        <button id="shuffleBtn">Mélanger</button>
     </div>
 
     <div class="speed-control">
@@ -379,6 +380,7 @@
         const scrollContent = document.getElementById('scrollContent');
         const pauseBtn = document.getElementById('pauseBtn');
         const resetBtn = document.getElementById('resetBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
         const speedRange = document.getElementById('speedRange');
         const speedValue = document.getElementById('speedValue');
         const adminToggle = document.getElementById('adminToggle');
@@ -464,6 +466,13 @@
                 scrollContent.style.animation = '';
                 updateSpeed(speedRange.value);
             }, 10);
+        });
+
+        // Mélanger les mots
+        shuffleBtn.addEventListener('click', () => {
+            shuffle(words);
+            generateContent();
+            updateSpeed(speedRange.value);
         });
 
         // Contrôle de vitesse
