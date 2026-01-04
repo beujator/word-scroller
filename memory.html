@@ -789,7 +789,18 @@
         });
 
         // Nouvelle partie
-        newGameBtn.addEventListener('click', createBoard);
+        newGameBtn.addEventListener('click', () => {
+            // Recharger et mélanger les symboles
+            const savedSymbols = localStorage.getItem('memorySymbols');
+            let symbolFullList;
+            if (savedSymbols) {
+                symbolFullList = JSON.parse(savedSymbols);
+            } else {
+                symbolFullList = [...defaultSymbols];
+            }
+            symbols = shuffle(symbolFullList).slice(0,9);
+            createBoard();
+        });
 
         // Bouton camion de pompier
         fireTruckBtn.addEventListener('click', showFireTruck);
