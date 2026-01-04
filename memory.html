@@ -96,7 +96,7 @@
             border-radius: 15px;
             font-size: 28px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            padding: 10px;
+            padding: 15px;
         }
 
         .card-front {
@@ -113,6 +113,20 @@
             font-weight: bold;
             text-align: center;
             word-break: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            line-height: 1.2;
+            overflow: hidden;
+        }
+
+        .card-back > div {
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .card-back .syllable-2 {
@@ -147,6 +161,16 @@
 
         button:active {
             transform: translateY(0);
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        button:disabled:hover {
+            transform: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
 
         .home-link {
@@ -332,11 +356,16 @@
             }
 
             .card-face {
-                font-size: 22px;
+                font-size: 18px;
+                padding: 10px;
             }
 
             .card-front {
                 font-size: 40px;
+            }
+
+            .card-back {
+                font-size: 18px;
             }
 
             .list-selector {
@@ -413,6 +442,7 @@
         let score = 0;
         let canFlip = true;
         let mismatchTimeout = null;
+        let fireTruckUses = 3;
 
         // Récupérer les éléments
         const memoryGrid = document.getElementById('memoryGrid');
@@ -446,13 +476,13 @@
             } else {
               symbolFullList = [...defaultSymbols];
             }
-            symbols = symbolFullList.slice(0,10);
+            symbols = shuffle(symbolFullList).slice(0,9);
             console.log(symbols.length)
         }
 
         // Sauvegarder les symboles
         function saveSymbols(symbolList) {
-            symbols = symbolList.slice(0,10);
+            symbols = shuffle(symbolList).slice(0,9);
             localStorage.setItem('memorySymbols', JSON.stringify(symbols));
         }
 
@@ -520,7 +550,9 @@
 
                 const cardBack = document.createElement('div');
                 cardBack.className = 'card-face card-back';
-                cardBack.innerHTML = formatWord(symbol);
+                const wordContainer = document.createElement('div');
+                wordContainer.innerHTML = formatWord(symbol);
+                cardBack.appendChild(wordContainer);
 
                 card.appendChild(cardFront);
                 card.appendChild(cardBack);
@@ -533,10 +565,12 @@
             moves = 0;
             matchedPairs = 0;
             flippedCards = [];
+            fireTruckUses = 3;
             movesValue.textContent = moves;
             pairsValue.textContent = matchedPairs;
             totalPairs.textContent = symbols.length;
             message.textContent = '';
+            updateFireTruckButton();
         }
 
         // Retourner une carte
@@ -631,10 +665,27 @@
             }, 2000);
         }
 
+        // Mettre à jour le bouton camion de pompier
+        function updateFireTruckButton() {
+            if (fireTruckUses > 0) {
+                fireTruckBtn.textContent = `🚒 Camion Pompier (${fireTruckUses})`;
+                fireTruckBtn.disabled = false;
+                fireTruckBtn.style.opacity = '1';
+            } else {
+                fireTruckBtn.textContent = '🚒 Camion Pompier (0)';
+                fireTruckBtn.disabled = true;
+                fireTruckBtn.style.opacity = '0.5';
+                fireTruckBtn.style.cursor = 'not-allowed';
+            }
+        }
+
         // Camion de pompier - retourne toutes les cartes
         function showFireTruck() {
             if (!canFlip) return; // Ne pas lancer si déjà en cours
+            if (fireTruckUses <= 0) return; // Plus d'utilisations disponibles
 
+            fireTruckUses--;
+            updateFireTruckButton();
             canFlip = false;
 
             // Retourner toutes les cartes non matchées
@@ -697,7 +748,7 @@
                 const data = await response.json();
 
                 if (data.success && data.list.words) {
-                    symbols = data.list.words.slice(0,10);
+                    symbols = shuffle(data.list.words).slice(0,9);
                     createBoard();
                     listStatus.textContent = '✓ Liste chargée';
 
