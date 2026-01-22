@@ -541,10 +541,10 @@
 
         <div class="list-selector-container">
             <label for="list-selector">Liste: ☁️</label>
-            <select id="list-selector" onchange="onListChange()">
-                <option value="local">Liste locale</option>
+            <select id="list-selector">
+                <option value="">📝 Ma liste locale</option>
             </select>
-            <span class="list-status local" id="list-status">Local</span>
+            <span class="list-status" id="list-status"></span>
         </div>
 
         <div class="stats">
@@ -684,6 +684,9 @@
             'co,chon'
         ];
 
+        // API pour les listes en ligne
+        const API_BASE = window.location.origin + '/api/lists';
+
         // Game state
         let currentWord = '';
         let currentWordSyllables = [];
@@ -693,8 +696,6 @@
         let score = 0;
         let gameOver = false;
         let currentWords = [];
-        let currentListId = 'local';
-        let availableLists = [];
 
         const snowmanParts = [
             'part-1', // chapeau
@@ -711,9 +712,27 @@
         function init() {
             loadScore();
             loadWords();
-            loadLists();
+            loadOnlineLists();
             createKeyboard();
+            setupEventListeners();
             newGame();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            const listSelector = document.getElementById('list-selector');
+            listSelector.addEventListener('change', (e) => {
+                const selectedList = e.target.value;
+                if (selectedList) {
+                    // Charger la liste en ligne
+                    loadOnlineList(selectedList);
+                } else {
+                    // Utiliser la liste locale
+                    loadWords();
+                    newGame();
+                    document.getElementById('list-status').textContent = '';
+                }
+            });
         }
 
         // Load score from localStorage
@@ -745,55 +764,70 @@
         }
 
         // Load lists from API
-        async function loadLists() {
+        async function loadOnlineLists() {
             try {
-                const response = await fetch('/api/lists');
-                const lists = await response.json();
-                availableLists = lists.filter(list =>
-                    list.game === 'snowman' || list.game === 'all'
-                );
+                const response = await fetch(API_BASE);
+                const data = await response.json();
 
-                const selector = document.getElementById('list-selector');
-                availableLists.forEach(list => {
-                    const option = document.createElement('option');
-                    option.value = list._id;
-                    option.textContent = list.name;
-                    selector.appendChild(option);
-                });
+                if (data.success && data.lists.length > 0) {
+                    // Filtrer les listes pour ce jeu (snowman ou all)
+                    const snowmanLists = data.lists.filter(list =>
+                        list.game === 'snowman' || list.game === 'all'
+                    );
+
+                    const selector = document.getElementById('list-selector');
+                    snowmanLists.forEach(list => {
+                        const option = document.createElement('option');
+                        option.value = list.name;
+                        option.textContent = `☁️ ${list.name} (${list.wordCount} mots)`;
+                        selector.appendChild(option);
+                    });
+
+                    const statusElement = document.getElementById('list-status');
+                    statusElement.textContent = `${snowmanLists.length} liste(s) en ligne`;
+                }
             } catch (error) {
-                console.log('Could not load online lists, using local only');
+                console.error('Erreur lors du chargement des listes:', error);
+                const statusElement = document.getElementById('list-status');
+                statusElement.textContent = '⚠️ Hors ligne';
             }
         }
 
-        // Handle list change
-        async function onListChange() {
-            const selector = document.getElementById('list-selector');
-            const listId = selector.value;
-            const statusElement = document.getElementById('list-status');
+        // Charger une liste en ligne spécifique
+        async function loadOnlineList(listName) {
+            try {
+                const statusElement = document.getElementById('list-status');
+                statusElement.textContent = '⏳ Chargement...';
 
-            currentListId = listId;
+                const response = await fetch(`${API_BASE}/${encodeURIComponent(listName)}`);
+                const data = await response.json();
 
-            if (listId === 'local') {
-                loadWords();
-                statusElement.textContent = 'Local';
-                statusElement.className = 'list-status local';
-            } else {
-                try {
-                    const response = await fetch(`/api/lists/${listId}`);
-                    const list = await response.json();
-                    currentWords = list.words.filter(w => w.trim());
-                    statusElement.textContent = 'En ligne';
-                    statusElement.className = 'list-status online';
-                } catch (error) {
-                    alert('Erreur lors du chargement de la liste');
-                    selector.value = 'local';
-                    loadWords();
-                    statusElement.textContent = 'Local';
-                    statusElement.className = 'list-status local';
+                if (data.success && data.list.words) {
+                    currentWords = data.list.words.filter(w => w.trim());
+                    newGame();
+                    statusElement.textContent = '✓ Liste chargée';
+
+                    setTimeout(() => {
+                        statusElement.textContent = '';
+                    }, 2000);
+                } else {
+                    statusElement.textContent = '❌ Erreur de chargement';
+                    setTimeout(() => {
+                        document.getElementById('list-selector').value = '';
+                        loadWords();
+                        newGame();
+                    }, 2000);
                 }
+            } catch (error) {
+                console.error('Erreur:', error);
+                const statusElement = document.getElementById('list-status');
+                statusElement.textContent = '❌ Erreur de connexion';
+                setTimeout(() => {
+                    document.getElementById('list-selector').value = '';
+                    loadWords();
+                    newGame();
+                }, 2000);
             }
-
-            newGame();
         }
 
         // Create keyboard
