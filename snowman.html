@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendu du Bonhomme de Neige</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=OpenDyslexic:wght@400;700&display=swap">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'OpenDyslexic', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #2c3e50;
+            border-radius: 25px;
+            color: #2c3e50;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .admin-button {
+            padding: 12px 24px;
+            background: #4a5568;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .admin-button:hover {
+            background: #2c3e50;
+            transform: translateY(-2px);
+        }
+
+        .title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 42px;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .list-selector-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .list-selector-container label {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .list-selector-container select {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: 2px solid #cbd5e0;
+            border-radius: 15px;
+            background: white;
+            font-family: 'OpenDyslexic', sans-serif;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .list-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .list-status.online {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .list-status.local {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: #4a5568;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .snowman-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #snowman {
+            max-width: 100%;
+            height: auto;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
+        .snowman-part {
+            transition: opacity 0.5s ease-out;
+        }
+
+        .word-area {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .word-display {
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 8px;
+            color: #2c3e50;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .second-syllable {
+            color: #c62828;
+        }
+
+        .used-letters {
+            text-align: center;
+        }
+
+        .used-letters-title {
+            font-size: 18px;
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .used-letters-list {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ef4444;
+            letter-spacing: 4px;
+        }
+
+        .keyboard {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+
+        .key {
+            padding: 15px;
+            font-size: 20px;
+            font-weight: 700;
+            border: 2px solid #cbd5e0;
+            border-radius: 15px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'OpenDyslexic', sans-serif;
+        }
+
+        .key:hover:not(:disabled) {
+            background: #2c3e50;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .key:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .new-game-button, .confetti-button {
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: 700;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-family: 'OpenDyslexic', sans-serif;
+        }
+
+        .new-game-button {
+            background: #22c55e;
+            color: white;
+        }
+
+        .new-game-button:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+        }
+
+        .confetti-button {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .confetti-button:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+
+        .help-button {
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-family: 'OpenDyslexic', sans-serif;
+            background: #3b82f6;
+            color: white;
+        }
+
+        .help-button:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .help-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .help-section {
+            margin-bottom: 20px;
+        }
+
+        .help-title {
+            text-align: center;
+            font-size: 18px;
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .help-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            min-height: 40px;
+            padding: 20px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .message.success {
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .message.error {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .admin-panel.active {
+            display: flex;
+        }
+
+        .admin-content {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .admin-content h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+
+        .admin-content p {
+            color: #4a5568;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .admin-content textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #cbd5e0;
+            border-radius: 15px;
+            font-family: 'OpenDyslexic', sans-serif;
+            margin-bottom: 20px;
+        }
+
+        .admin-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .admin-buttons button {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'OpenDyslexic', sans-serif;
+        }
+
+        .save-button {
+            background: #22c55e;
+            color: white;
+        }
+
+        .save-button:hover {
+            background: #16a34a;
+        }
+
+        .reset-button {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .reset-button:hover {
+            background: #d97706;
+        }
+
+        .reset-score-button {
+            background: #ef4444;
+            color: white;
+        }
+
+        .reset-score-button:hover {
+            background: #dc2626;
+        }
+
+        .close-button {
+            background: #6b7280;
+            color: white;
+        }
+
+        .close-button:hover {
+            background: #4b5563;
+        }
+
+        /* Rocket animation */
+        .rocket {
+            position: fixed;
+            font-size: 60px;
+            bottom: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        @keyframes flyRocket {
+            to {
+                bottom: 120vh;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 28px;
+            }
+
+            .game-area {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            #snowman {
+                max-width: 200px;
+            }
+
+            .word-display {
+                font-size: 32px;
+                letter-spacing: 4px;
+            }
+
+            .keyboard {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 8px;
+                padding: 0 10px;
+            }
+
+            .key {
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+
+            .new-game-button, .confetti-button {
+                padding: 12px 30px;
+                font-size: 18px;
+            }
+
+            .help-button {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+
+            .help-title {
+                font-size: 16px;
+            }
+
+            .admin-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-button">← Accueil</a>
+            <button class="admin-button" onclick="toggleAdminPanel()">Admin</button>
+        </div>
+
+        <h1 class="title">⛄ Pendu du Bonhomme de Neige ❄️</h1>
+
+        <div class="list-selector-container">
+            <label for="list-selector">Liste: ☁️</label>
+            <select id="list-selector" onchange="onListChange()">
+                <option value="local">Liste locale</option>
+            </select>
+            <span class="list-status local" id="list-status">Local</span>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Erreurs</div>
+                <div class="stat-value" id="errors">0/8</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="snowman-container">
+                <svg viewBox="0 0 200 300" id="snowman" width="200" height="300">
+                    <!-- Boule de base (plus grosse) -->
+                    <circle id="part-8" class="snowman-part" cx="100" cy="240" r="55" fill="white" stroke="#cbd5e0" stroke-width="2"/>
+
+                    <!-- Boule du milieu -->
+                    <circle id="part-7" class="snowman-part" cx="100" cy="150" r="45" fill="white" stroke="#cbd5e0" stroke-width="2"/>
+
+                    <!-- Tête (toujours visible) -->
+                    <circle cx="100" cy="70" r="35" fill="white" stroke="#cbd5e0" stroke-width="2"/>
+
+                    <!-- Bras droit (branche) -->
+                    <g id="part-6" class="snowman-part">
+                        <line x1="145" y1="150" x2="180" y2="130" stroke="#8b4513" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="170" y1="135" x2="180" y2="125" stroke="#8b4513" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="175" y1="140" x2="185" y2="135" stroke="#8b4513" stroke-width="2" stroke-linecap="round"/>
+                    </g>
+
+                    <!-- Bras gauche (branche) -->
+                    <g id="part-5" class="snowman-part">
+                        <line x1="55" y1="150" x2="20" y2="130" stroke="#8b4513" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="30" y1="135" x2="20" y2="125" stroke="#8b4513" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="25" y1="140" x2="15" y2="135" stroke="#8b4513" stroke-width="2" stroke-linecap="round"/>
+                    </g>
+
+                    <!-- 3 boutons -->
+                    <g id="part-4" class="snowman-part">
+                        <circle cx="100" cy="140" r="4" fill="#2c3e50"/>
+                        <circle cx="100" cy="155" r="4" fill="#2c3e50"/>
+                        <circle cx="100" cy="170" r="4" fill="#2c3e50"/>
+                    </g>
+
+                    <!-- Écharpe -->
+                    <g id="part-3" class="snowman-part">
+                        <rect x="75" y="95" width="50" height="15" fill="#ef4444" rx="3"/>
+                        <rect x="120" y="100" width="8" height="40" fill="#ef4444" rx="2"/>
+                    </g>
+
+                    <!-- Yeux (toujours visibles) -->
+                    <circle cx="90" cy="65" r="3" fill="#2c3e50"/>
+                    <circle cx="110" cy="65" r="3" fill="#2c3e50"/>
+
+                    <!-- Carotte (nez) -->
+                    <polygon id="part-2" class="snowman-part" points="100,75 125,78 100,81" fill="#fb923c"/>
+
+                    <!-- Chapeau -->
+                    <g id="part-1" class="snowman-part">
+                        <ellipse cx="100" cy="40" rx="30" ry="5" fill="#2c3e50"/>
+                        <rect x="85" y="20" width="30" height="20" fill="#2c3e50" rx="2"/>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="word-area">
+                <div class="word-display" id="word-display">_ _ _ _ _</div>
+                <div class="used-letters">
+                    <div class="used-letters-title">Lettres utilisées:</div>
+                    <div class="used-letters-list" id="used-letters"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="keyboard" id="keyboard"></div>
+
+        <div class="help-section">
+            <div class="help-title">💡 Aides</div>
+            <div class="help-buttons">
+                <button class="help-button" id="help-vowel" onclick="showVowel()">Montrer une voyelle</button>
+                <button class="help-button" id="help-consonant" onclick="showConsonant()">Montrer une consonne</button>
+                <button class="help-button" id="help-letter" onclick="showLetter()">Montrer une lettre</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="new-game-button" onclick="newGame()">Nouvelle partie</button>
+            <button class="confetti-button" onclick="launchConfetti()">🎉 Confettis</button>
+        </div>
+
+        <div class="message" id="message"></div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-panel" id="admin-panel">
+        <div class="admin-content">
+            <h2>⚙️ Administration</h2>
+            <p>Éditez la liste de mots (un mot par ligne). Vous pouvez séparer les syllabes par une virgule (ex: mai,son) pour colorier la 2ème syllabe en rouge.</p>
+            <p><strong>Minimum 5 mots requis.</strong></p>
+            <textarea id="words-textarea"></textarea>
+            <div class="admin-buttons">
+                <button class="save-button" onclick="saveWords()">Sauvegarder</button>
+                <button class="reset-button" onclick="resetWords()">Réinitialiser mots</button>
+                <button class="reset-score-button" onclick="resetScore()">Réinitialiser score</button>
+                <button class="close-button" onclick="toggleAdminPanel()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="rocket" id="rocket">🚀</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        // Default words
+        const DEFAULT_WORDS = [
+            'mai,son',
+            'jar,din',
+            'ba,teau',
+            'so,leil',
+            'é,toile',
+            'ci,tron',
+            'po,isson',
+            'pa,pier',
+            'cra,yon',
+            'fe,nêtre',
+            'voi,ture',
+            'ta,ble',
+            'chai,se',
+            'li,vre',
+            'or,di,na,teur',
+            'té,lé,phone',
+            'cho,co,lat',
+            'pa,ra,pluie',
+            'pa,pil,lon',
+            'co,chon'
+        ];
+
+        // Game state
+        let currentWord = '';
+        let currentWordSyllables = [];
+        let guessedLetters = [];
+        let wrongLetters = [];
+        let errors = 0;
+        let score = 0;
+        let gameOver = false;
+        let currentWords = [];
+        let currentListId = 'local';
+        let availableLists = [];
+
+        const snowmanParts = [
+            'part-1', // chapeau
+            'part-2', // carotte
+            'part-3', // écharpe
+            'part-4', // boutons
+            'part-5', // bras gauche
+            'part-6', // bras droit
+            'part-7', // boule milieu
+            'part-8'  // boule base
+        ];
+
+        // Initialize
+        function init() {
+            loadScore();
+            loadWords();
+            loadLists();
+            createKeyboard();
+            newGame();
+        }
+
+        // Load score from localStorage
+        function loadScore() {
+            const savedScore = localStorage.getItem('snowmanScore');
+            score = savedScore ? parseInt(savedScore) : 0;
+            updateScore();
+        }
+
+        // Save score to localStorage
+        function saveScore() {
+            localStorage.setItem('snowmanScore', score.toString());
+            updateScore();
+        }
+
+        // Update score display
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        // Load words from localStorage or use defaults
+        function loadWords() {
+            const savedWords = localStorage.getItem('snowmanWords');
+            if (savedWords) {
+                currentWords = savedWords.split('\n').filter(w => w.trim());
+            } else {
+                currentWords = [...DEFAULT_WORDS];
+            }
+        }
+
+        // Load lists from API
+        async function loadLists() {
+            try {
+                const response = await fetch('/api/lists');
+                const lists = await response.json();
+                availableLists = lists.filter(list =>
+                    list.game === 'snowman' || list.game === 'all'
+                );
+
+                const selector = document.getElementById('list-selector');
+                availableLists.forEach(list => {
+                    const option = document.createElement('option');
+                    option.value = list._id;
+                    option.textContent = list.name;
+                    selector.appendChild(option);
+                });
+            } catch (error) {
+                console.log('Could not load online lists, using local only');
+            }
+        }
+
+        // Handle list change
+        async function onListChange() {
+            const selector = document.getElementById('list-selector');
+            const listId = selector.value;
+            const statusElement = document.getElementById('list-status');
+
+            currentListId = listId;
+
+            if (listId === 'local') {
+                loadWords();
+                statusElement.textContent = 'Local';
+                statusElement.className = 'list-status local';
+            } else {
+                try {
+                    const response = await fetch(`/api/lists/${listId}`);
+                    const list = await response.json();
+                    currentWords = list.words.filter(w => w.trim());
+                    statusElement.textContent = 'En ligne';
+                    statusElement.className = 'list-status online';
+                } catch (error) {
+                    alert('Erreur lors du chargement de la liste');
+                    selector.value = 'local';
+                    loadWords();
+                    statusElement.textContent = 'Local';
+                    statusElement.className = 'list-status local';
+                }
+            }
+
+            newGame();
+        }
+
+        // Create keyboard
+        function createKeyboard() {
+            const keyboard = document.getElementById('keyboard');
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+            letters.forEach(letter => {
+                const button = document.createElement('button');
+                button.className = 'key';
+                button.textContent = letter;
+                button.onclick = () => guessLetter(letter);
+                keyboard.appendChild(button);
+            });
+        }
+
+        // New game
+        function newGame() {
+            if (currentWords.length === 0) {
+                alert('Aucun mot disponible!');
+                return;
+            }
+
+            // Pick random word
+            const randomIndex = Math.floor(Math.random() * currentWords.length);
+            const wordWithSyllables = currentWords[randomIndex];
+
+            // Parse syllables
+            currentWordSyllables = wordWithSyllables.split(',');
+            currentWord = currentWordSyllables.join('').toLowerCase();
+
+            // Reset game state
+            guessedLetters = [];
+            wrongLetters = [];
+            errors = 0;
+            gameOver = false;
+
+            // Reset UI
+            updateWordDisplay();
+            updateErrorsDisplay();
+            updateUsedLetters();
+            resetSnowman();
+            enableAllKeys();
+            enableHelpButtons();
+            document.getElementById('message').textContent = '';
+            document.getElementById('message').className = 'message';
+        }
+
+        // Guess letter
+        function guessLetter(letter) {
+            if (gameOver) return;
+
+            const lowerLetter = letter.toLowerCase();
+
+            // Disable button
+            const buttons = document.querySelectorAll('.key');
+            buttons.forEach(btn => {
+                if (btn.textContent === letter) {
+                    btn.disabled = true;
+                }
+            });
+
+            // Check if letter is in word
+            if (currentWord.includes(lowerLetter)) {
+                guessedLetters.push(lowerLetter);
+                updateWordDisplay();
+
+                // Check for win
+                if (isWordComplete()) {
+                    win();
+                }
+            } else {
+                wrongLetters.push(lowerLetter);
+                errors++;
+                updateErrorsDisplay();
+                updateUsedLetters();
+                removeSnowmanPart(errors);
+
+                // Check for loss
+                if (errors >= 8) {
+                    lose();
+                }
+            }
+        }
+
+        // Show vowel helper
+        function showVowel() {
+            if (gameOver) return;
+
+            const vowels = 'aeiouyéèêëàâäôöùûüÿ';
+            const availableVowels = [];
+
+            // Find vowels in the word that haven't been guessed yet
+            for (let char of currentWord) {
+                if (vowels.includes(char) && !guessedLetters.includes(char) && !availableVowels.includes(char)) {
+                    availableVowels.push(char);
+                }
+            }
+
+            if (availableVowels.length === 0) {
+                alert('Toutes les voyelles ont déjà été trouvées!');
+                return;
+            }
+
+            // Pick random vowel
+            const randomVowel = availableVowels[Math.floor(Math.random() * availableVowels.length)];
+            guessLetter(randomVowel.toUpperCase());
+        }
+
+        // Show consonant helper
+        function showConsonant() {
+            if (gameOver) return;
+
+            const vowels = 'aeiouyéèêëàâäôöùûüÿ';
+            const availableConsonants = [];
+
+            // Find consonants in the word that haven't been guessed yet
+            for (let char of currentWord) {
+                if (!vowels.includes(char) && !guessedLetters.includes(char) && !availableConsonants.includes(char)) {
+                    availableConsonants.push(char);
+                }
+            }
+
+            if (availableConsonants.length === 0) {
+                alert('Toutes les consonnes ont déjà été trouvées!');
+                return;
+            }
+
+            // Pick random consonant
+            const randomConsonant = availableConsonants[Math.floor(Math.random() * availableConsonants.length)];
+            guessLetter(randomConsonant.toUpperCase());
+        }
+
+        // Show any letter helper
+        function showLetter() {
+            if (gameOver) return;
+
+            const availableLetters = [];
+
+            // Find letters in the word that haven't been guessed yet
+            for (let char of currentWord) {
+                if (!guessedLetters.includes(char) && !availableLetters.includes(char)) {
+                    availableLetters.push(char);
+                }
+            }
+
+            if (availableLetters.length === 0) {
+                alert('Toutes les lettres ont déjà été trouvées!');
+                return;
+            }
+
+            // Pick random letter
+            const randomLetter = availableLetters[Math.floor(Math.random() * availableLetters.length)];
+            guessLetter(randomLetter.toUpperCase());
+        }
+
+        // Update word display
+        function updateWordDisplay() {
+            let displayText = '';
+            let charIndex = 0;
+            let syllableIndex = 0;
+
+            for (let i = 0; i < currentWordSyllables.length; i++) {
+                const syllable = currentWordSyllables[i];
+                const isSecondSyllable = (i === 1);
+
+                for (let j = 0; j < syllable.length; j++) {
+                    const char = syllable[j].toLowerCase();
+
+                    if (guessedLetters.includes(char)) {
+                        if (isSecondSyllable) {
+                            displayText += `<span class="second-syllable">${char.toUpperCase()}</span> `;
+                        } else {
+                            displayText += char.toUpperCase() + ' ';
+                        }
+                    } else {
+                        displayText += '_ ';
+                    }
+                }
+            }
+
+            document.getElementById('word-display').innerHTML = displayText.trim();
+        }
+
+        // Update errors display
+        function updateErrorsDisplay() {
+            document.getElementById('errors').textContent = `${errors}/8`;
+        }
+
+        // Update used letters
+        function updateUsedLetters() {
+            document.getElementById('used-letters').textContent =
+                wrongLetters.map(l => l.toUpperCase()).join(' ');
+        }
+
+        // Check if word is complete
+        function isWordComplete() {
+            for (let char of currentWord) {
+                if (!guessedLetters.includes(char)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Remove snowman part
+        function removeSnowmanPart(errorCount) {
+            if (errorCount > 0 && errorCount <= snowmanParts.length) {
+                const partId = snowmanParts[errorCount - 1];
+                const part = document.getElementById(partId);
+                if (part) {
+                    part.style.opacity = '0';
+                }
+            }
+        }
+
+        // Reset snowman
+        function resetSnowman() {
+            snowmanParts.forEach(partId => {
+                const part = document.getElementById(partId);
+                if (part) {
+                    part.style.opacity = '1';
+                }
+            });
+        }
+
+        // Enable all keys
+        function enableAllKeys() {
+            const buttons = document.querySelectorAll('.key');
+            buttons.forEach(btn => btn.disabled = false);
+        }
+
+        // Disable all keys
+        function disableAllKeys() {
+            const buttons = document.querySelectorAll('.key');
+            buttons.forEach(btn => btn.disabled = true);
+        }
+
+        // Enable help buttons
+        function enableHelpButtons() {
+            document.getElementById('help-vowel').disabled = false;
+            document.getElementById('help-consonant').disabled = false;
+            document.getElementById('help-letter').disabled = false;
+        }
+
+        // Disable help buttons
+        function disableHelpButtons() {
+            document.getElementById('help-vowel').disabled = true;
+            document.getElementById('help-consonant').disabled = true;
+            document.getElementById('help-letter').disabled = true;
+        }
+
+        // Win
+        function win() {
+            gameOver = true;
+            disableAllKeys();
+            disableHelpButtons();
+
+            // Calculate points
+            let points = 10;
+            if (errors <= 2) {
+                points += 5; // Bonus for speed
+            }
+
+            score += points;
+            saveScore();
+
+            const message = document.getElementById('message');
+            message.textContent = `🎉 Bravo ! Le mot était "${currentWordSyllables.join('')}" (+${points} points)`;
+            message.className = 'message success';
+
+            launchConfetti();
+            launchRocket();
+        }
+
+        // Lose
+        function lose() {
+            gameOver = true;
+            disableAllKeys();
+            disableHelpButtons();
+
+            const message = document.getElementById('message');
+            message.textContent = `❄️ Perdu ! Le mot était "${currentWordSyllables.join('')}"`;
+            message.className = 'message error';
+        }
+
+        // Launch confetti
+        function launchConfetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        // Launch rocket
+        function launchRocket() {
+            const rocket = document.getElementById('rocket');
+            rocket.style.animation = 'none';
+            setTimeout(() => {
+                rocket.style.animation = 'flyRocket 3s ease-in forwards';
+            }, 10);
+
+            setTimeout(() => {
+                rocket.style.animation = 'none';
+                rocket.style.bottom = '-200px';
+            }, 3100);
+        }
+
+        // Toggle admin panel
+        function toggleAdminPanel() {
+            const panel = document.getElementById('admin-panel');
+            const textarea = document.getElementById('words-textarea');
+
+            if (panel.classList.contains('active')) {
+                panel.classList.remove('active');
+            } else {
+                panel.classList.add('active');
+                textarea.value = currentWords.join('\n');
+            }
+        }
+
+        // Save words
+        function saveWords() {
+            const textarea = document.getElementById('words-textarea');
+            const words = textarea.value.split('\n').filter(w => w.trim());
+
+            if (words.length < 5) {
+                alert('Vous devez avoir au moins 5 mots!');
+                return;
+            }
+
+            currentWords = words;
+            localStorage.setItem('snowmanWords', words.join('\n'));
+            alert('Liste sauvegardée!');
+            toggleAdminPanel();
+            newGame();
+        }
+
+        // Reset words
+        function resetWords() {
+            if (confirm('Réinitialiser la liste aux mots par défaut?')) {
+                currentWords = [...DEFAULT_WORDS];
+                localStorage.setItem('snowmanWords', currentWords.join('\n'));
+                document.getElementById('words-textarea').value = currentWords.join('\n');
+                alert('Liste réinitialisée!');
+            }
+        }
+
+        // Reset score
+        function resetScore() {
+            if (confirm('Réinitialiser le score à 0?')) {
+                score = 0;
+                saveScore();
+                alert('Score réinitialisé!');
+            }
+        }
+
+        // Start game
+        init();
+    </script>
+</body>
+</html>
