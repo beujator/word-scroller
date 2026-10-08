@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Donjon des Lettres - Jeux Éducatifs</title>
+    <style>
+        @font-face {
+            font-family: 'OpenDyslexic';
+            src: url('OpenDyslexicAlta-Regular.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'OpenDyslexic', 'Arial', sans-serif;
+            background: #1a1423;
+            color: #f5ecd7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .top-bar {
+            width: 100%;
+            max-width: 624px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .home-link {
+            color: #f5ecd7;
+            text-decoration: none;
+            background: #3a2d4a;
+            border: 2px solid #5b4775;
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+
+        select {
+            font-family: inherit;
+            font-size: 14px;
+            padding: 6px;
+            border-radius: 8px;
+            border: 2px solid #5b4775;
+            background: #3a2d4a;
+            color: #f5ecd7;
+        }
+
+        .list-status {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .hud {
+            width: 100%;
+            max-width: 624px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #000;
+            border: 3px solid #5b4775;
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+            padding: 8px 12px;
+            gap: 10px;
+        }
+
+        .hearts {
+            font-size: 22px;
+            letter-spacing: 2px;
+        }
+
+        .score, .room {
+            color: #ffd75e;
+        }
+
+        .room {
+            font-size: 13px;
+        }
+
+        .hud button, .actions button {
+            font-family: inherit;
+            font-size: 18px;
+            background: #3a2d4a;
+            color: #f5ecd7;
+            border: 2px solid #5b4775;
+            border-radius: 8px;
+            padding: 4px 10px;
+            cursor: pointer;
+        }
+
+        .slots {
+            width: 100%;
+            max-width: 624px;
+            min-height: 64px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            background: #000;
+            border-left: 3px solid #5b4775;
+            border-right: 3px solid #5b4775;
+            padding: 8px;
+        }
+
+        .syllable {
+            display: flex;
+            gap: 4px;
+        }
+
+        .slot {
+            width: 36px;
+            height: 46px;
+            border-bottom: 4px solid #8b7aa3;
+            font-size: 28px;
+            line-height: 46px;
+            text-align: center;
+        }
+
+        .slot.filled {
+            color: #7dff8a;
+        }
+
+        .syllable.second .slot.filled {
+            color: #ff6b6b;
+        }
+
+        .slot.next {
+            border-bottom-color: #ffd75e;
+            animation: blink 0.8s steps(2) infinite;
+        }
+
+        @keyframes blink {
+            50% { border-bottom-color: transparent; }
+        }
+
+        .stage {
+            position: relative;
+            width: 100%;
+            max-width: 624px;
+            border: 3px solid #5b4775;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+            line-height: 0;
+        }
+
+        canvas {
+            width: 100%;
+            height: auto;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            display: block;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10, 6, 20, 0.85);
+            line-height: 1.4;
+            text-align: center;
+            padding: 20px;
+            cursor: pointer;
+        }
+
+        .overlay.visible {
+            display: flex;
+        }
+
+        .overlay .label {
+            font-size: 16px;
+            opacity: 0.85;
+            margin-bottom: 10px;
+        }
+
+        .overlay .word {
+            font-size: clamp(36px, 10vw, 64px);
+            color: #fff;
+        }
+
+        .overlay .word .s2 {
+            color: #ff6b6b;
+        }
+
+        .overlay .hint {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-top: 14px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Croix directionnelle + bouton A, pour tablette */
+        .pad {
+            display: grid;
+            grid-template-columns: repeat(3, 56px);
+            grid-template-rows: repeat(3, 56px);
+            gap: 4px;
+            margin-top: 14px;
+        }
+
+        .pad button, .a-button {
+            font-size: 24px;
+            background: #3a2d4a;
+            color: #f5ecd7;
+            border: 2px solid #5b4775;
+            border-radius: 10px;
+            touch-action: none;
+        }
+
+        .pad .up { grid-column: 2; grid-row: 1; }
+        .pad .left { grid-column: 1; grid-row: 2; }
+        .pad .right { grid-column: 3; grid-row: 2; }
+        .pad .down { grid-column: 2; grid-row: 3; }
+
+        .controls {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .a-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #a3324b;
+            border-color: #d65a73;
+            font-family: inherit;
+        }
+
+        .help {
+            font-size: 13px;
+            opacity: 0.75;
+            margin-top: 10px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .controls {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html" class="home-link">← Menu</a>
+        <div>
+            <select id="onlineList" aria-label="Liste de mots">
+                <option value="">📝 Liste par défaut</option>
+            </select>
+            <span id="listStatus" class="list-status"></span>
+        </div>
+        <select id="mode" aria-label="Mode">
+            <option value="look">👁 Voir puis écrire</option>
+            <option value="listen">🔊 Écouter puis écrire</option>
+        </select>
+    </div>
+
+    <div class="hud">
+        <span class="hearts" id="hearts" aria-label="Vies"></span>
+        <span id="room" class="room"></span>
+        <span>
+            <button id="speakBtn" title="Écouter le mot">🔊</button>
+            <button id="lookBtn" title="Revoir le mot">👁</button>
+        </span>
+        <span class="score">💎 <span id="score">0</span></span>
+    </div>
+    <div class="slots" id="slots" aria-live="polite"></div>
+    <div class="stage">
+        <canvas id="game" width="624" height="528"></canvas>
+        <div class="overlay" id="overlay">
+            <div class="label" id="overlayLabel">Regarde bien le mot :</div>
+            <div class="word" id="overlayWord"></div>
+            <div class="hint">Touche ou appuie sur une touche pour commencer</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="pad">
+            <button class="up" data-dir="up" aria-label="Haut">▲</button>
+            <button class="left" data-dir="left" aria-label="Gauche">◀</button>
+            <button class="right" data-dir="right" aria-label="Droite">▶</button>
+            <button class="down" data-dir="down" aria-label="Bas">▼</button>
+        </div>
+        <button class="a-button" id="aButton" aria-label="Activer la dalle">A</button>
+    </div>
+    <p class="help">
+        Flèches pour marcher · Espace sur une dalle pour écrire sa lettre.<br>
+        Écris le mot lettre par lettre pour ouvrir la porte !
+    </p>
+
+    <script src="common.js"></script>
+    <script>
+        // ---------- Données ----------
+        const API_BASE = window.location.origin + '/api/lists';
+        const defaultWords = [
+            'ma,ison', 'cha,teau', 'dra,gon', 'é,pée', 'tré,sor',
+            'clé', 'por,te', 'bou,clier', 'la,pin', 'fo,rêt'
+        ];
+
+        // Lettres faciles à confondre : elles servent de pièges
+        const CONFUSIONS = {
+            b: 'dpq', d: 'bpq', p: 'bdq', q: 'bdp', m: 'n', n: 'mu', u: 'n',
+            f: 'v', v: 'f', s: 'zc', z: 's', c: 'ks', k: 'c', g: 'jq', j: 'g',
+            t: 'd', e: 'éèa', 'é': 'eè', 'è': 'eé', 'ê': 'eè', a: 'oà', o: 'a',
+            i: 'l', l: 'i', r: 'l'
+        };
+
+        const COLS = 13, ROWS = 11;
+        const PX = 3;            // taille d'un pixel « SNES » à l'écran
+        const T = 16 * PX;       // une case = 16 × 16 pixels
+        const START = { c: 6, r: 9 };
+        const DOOR = { c: 6, r: 0 };
+        const RUN_SIZE = 5;      // salles avant la salle finale
+        const SLOTS = [];        // emplacements des dalles (les 20 premiers suffisent hors salle finale)
+        for (let r = 2; r <= 8; r += 2) for (let c = 2; c <= 10; c += 2) SLOTS.push({ c, r });
+        for (let r = 3; r <= 7; r += 2) for (let c = 3; c <= 9; c += 2) SLOTS.push({ c, r });
+
+        // Couleurs de sol / murs, une par salle
+        const PALETTES = [
+            { floor: '#5c5470', floor2: '#524a66', wall: '#2e2640', wall2: '#3d3355', line: '#443c58' },
+            { floor: '#4f6b5a', floor2: '#466150', wall: '#22352b', wall2: '#2f4639', line: '#3c5547' },
+            { floor: '#7a5f4a', floor2: '#6e5442', wall: '#3b2a1f', wall2: '#4d382a', line: '#5f4838' },
+            { floor: '#4a5f7a', floor2: '#42556e', wall: '#1f2b3b', wall2: '#2a3a4f', line: '#38485e' }
+        ];
+        const TREASURE_PALETTE = { floor: '#8a6d2f', floor2: '#7c6129', wall: '#3d2a10', wall2: '#5a3f18', line: '#6b5222' };
+
+        // Héros original 12 × 14, une lettre = une couleur
+        const HERO_COLORS = { h: '#6b3e1f', s: '#f2c491', e: '#1d1d1d', t: '#3b6fd1', T: '#274b94', b: '#8a5a2b', l: '#4a2f17' };
+        const HERO = {
+            down: [
+                '...hhhhhh...',
+                '..hhhhhhhh..',
+                '..hhhhhhhh..',
+                '..hssssssh..',
+                '..sesssses..',
+                '..ssssssss..',
+                '...ssssss...',
+                '..TttttttT..',
+                '.sTttbbttTs.',
+                '.sTttttttTs.',
+                '..TttttttT..',
+                '...tt..tt...',
+                '...ll..ll...',
+                '...ll..ll...'
+            ],
+            up: [
+                '...hhhhhh...',
+                '..hhhhhhhh..',
+                '..hhhhhhhh..',
+                '..hhhhhhhh..',
+                '..hhhhhhhh..',
+                '..shhhhhhs..',
+                '...ssssss...',
+                '..TttttttT..',
+                '.sTttttttTs.',
+                '.sTttttttTs.',
+                '..TttttttT..',
+                '...tt..tt...',
+                '...ll..ll...',
+                '...ll..ll...'
+            ],
+            right: [
+                '...hhhhh....',
+                '..hhhhhhh...',
+                '..hhhhhhhh..',
+                '..hhhsssss..',
+                '..hhssssess.',
+                '..hsssssss..',
+                '...sssss....',
+                '...TtttttT..',
+                '...TttsstT..',
+                '...TtbbbtT..',
+                '...TtttttT..',
+                '....tt.tt...',
+                '....ll.ll...',
+                '....ll.ll...'
+            ]
+        };
+
+        // ---------- État ----------
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+
+        let words = [...defaultWords];
+        let currentWord = '';      // avec les virgules de syllabes
+        let target = [];           // lettres à écrire
+        let pos = 0;               // prochaine lettre attendue
+        let hearts = 3;
+        let mistakes = 0;
+        let score = 0;
+        let runWords = [];         // les mots de ce donjon
+        let roomIndex = 0;         // runWords.length = salle finale
+        let finalIndex = 0;        // mot en cours dans la salle finale
+        let victory = false;
+        let tiles = [];            // { c, r, letter, flash, flashColor }
+        let doorOpen = false;
+        let paused = true;         // l'overlay du mot bloque le jeu
+        let fade = 0;              // 0 = visible, 1 = noir
+        let fadeDir = 0;
+        let shake = 0;
+        const player = { c: START.c, r: START.r, x: START.c * T, y: START.r * T, dir: 'up', moving: null, step: 0 };
+        const held = new Set();
+
+        const isLetter = ch => /\p{L}/u.test(ch);
+        const randomItem = arr => arr[Math.floor(Math.random() * arr.length)];
+
+        function loadScore() {
+            score = parseInt(localStorage.getItem('donjonScore')) || 0;
+            document.getElementById('score').textContent = score;
+        }
+
+        function addScore(points) {
+            score += points;
+            try { localStorage.setItem('donjonScore', String(score)); } catch {}
+            document.getElementById('score').textContent = score;
+        }
+
+        // ---------- Son (bips façon console 16 bits) ----------
+        let audio = null;
+        function beep(notes, type = 'square', length = 0.09) {
+            try {
+                audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+                notes.forEach((freq, i) => {
+                    const osc = audio.createOscillator();
+                    const gain = audio.createGain();
+                    osc.type = type;
+                    osc.frequency.value = freq;
+                    const start = audio.currentTime + i * length;
+                    gain.gain.setValueAtTime(0.08, start);
+                    gain.gain.exponentialRampToValueAtTime(0.001, start + length * 0.95);
+                    osc.connect(gain).connect(audio.destination);
+                    osc.start(start);
+                    osc.stop(start + length);
+                });
+            } catch {
+                // pas de son : le jeu continue
+            }
+        }
+        const sounds = {
+            good: () => beep([660, 880]),
+            bad: () => beep([180, 140], 'sawtooth', 0.12),
+            door: () => beep([523, 659, 784, 1047], 'square', 0.11),
+            step: () => beep([220], 'triangle', 0.03)
+        };
+
+        // ---------- Voix ----------
+        function speak() {
+            if (!window.speechSynthesis) return;
+            speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(currentWord.replace(/,/g, ''));
+            utterance.lang = 'fr-FR';
+            const voice = speechSynthesis.getVoices().find(v => v.lang.startsWith('fr'));
+            if (voice) utterance.voice = voice;
+            speechSynthesis.speak(utterance);
+        }
+
+        // ---------- Donjon ----------
+        const isFinal = () => roomIndex >= runWords.length;
+
+        // Un donjon = RUN_SIZE salles (un mot chacune), puis la salle finale avec tous les mots
+        function startRun() {
+            runWords = [...new Set(Progress.order(words))].slice(0, RUN_SIZE);
+            roomIndex = 0;
+            victory = false;
+            enterRoom();
+        }
+
+        function enterRoom() {
+            doorOpen = false;
+            player.c = START.c; player.r = START.r;
+            player.x = START.c * T; player.y = START.r * T;
+            player.dir = 'up'; player.moving = null;
+
+            if (isFinal()) {
+                finalIndex = 0;
+                placeTiles(runWords);
+                startWord(runWords[0]);
+            } else {
+                placeTiles([runWords[roomIndex]]);
+                startWord(runWords[roomIndex]);
+            }
+            renderRoomLabel();
+        }
+
+        function startWord(word) {
+            currentWord = word;
+            target = [...word.replace(/,/g, '').trim().toLowerCase()];
+            pos = 0;
+            hearts = 3;
+            mistakes = 0;
+            skipNonLetters();
+            renderSlots();
+            renderHearts();
+            showWord(false);
+        }
+
+        // Une dalle par lettre différente des mots, plus des lettres pièges
+        function placeTiles(roomWords) {
+            const letters = [...new Set(roomWords.flatMap(w => [...w.replace(/,/g, '').toLowerCase()]).filter(isLetter))];
+            const traps = new Set();
+            letters.forEach(l => [...(CONFUSIONS[l] || '')].forEach(t => {
+                if (!letters.includes(t)) traps.add(t);
+            }));
+            while (traps.size < 3) {
+                const l = randomItem([...'abcdefghijklmnopqrstuvwxyz']);
+                if (!letters.includes(l)) traps.add(l);
+            }
+            const maxSlots = isFinal() ? SLOTS.length : 20;
+            const trapCount = Math.max(0, Math.min(6, maxSlots - letters.length));
+            const all = [...letters, ...shuffle([...traps]).slice(0, trapCount)].slice(0, maxSlots);
+            const places = shuffle(SLOTS.slice(0, maxSlots));
+            tiles = all.map((letter, i) => ({ ...places[i], letter, flash: 0, flashColor: null }));
+        }
+
+        // Le tiret, l'apostrophe ou l'espace s'écrivent tout seuls
+        function skipNonLetters() {
+            while (pos < target.length && !isLetter(target[pos])) pos++;
+        }
+
+        function shuffle(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // ---------- Affichage HTML ----------
+        function renderSlots() {
+            const slots = document.getElementById('slots');
+            slots.textContent = '';
+            let index = 0;
+            currentWord.split(',').forEach((syllable, s) => {
+                const group = document.createElement('div');
+                group.className = 'syllable' + (s === 1 ? ' second' : '');
+                for (const ch of syllable.trim()) {
+                    const slot = document.createElement('div');
+                    slot.className = 'slot';
+                    if (index < pos) {
+                        slot.classList.add('filled');
+                        slot.textContent = ch;
+                    } else if (index === pos) {
+                        slot.classList.add('next');
+                    }
+                    group.appendChild(slot);
+                    index++;
+                }
+                slots.appendChild(group);
+            });
+        }
+
+        function renderRoomLabel() {
+            document.getElementById('room').textContent = isFinal()
+                ? `🏆 Salle finale · mot ${finalIndex + 1}/${runWords.length}`
+                : `Salle ${roomIndex + 1}/${runWords.length}`;
+        }
+
+        function renderHearts() {
+            document.getElementById('hearts').textContent = '❤️'.repeat(hearts) + '🖤'.repeat(3 - hearts);
+        }
+
+        function showWord(again, label) {
+            const overlay = document.getElementById('overlay');
+            const wordEl = document.getElementById('overlayWord');
+            // Salle finale : on retrouve les mots de mémoire, à l'oreille (👁 reste une aide)
+            const listenMode = (isFinal() && !again) || document.getElementById('mode').value === 'listen';
+            wordEl.textContent = '';
+            document.querySelector('#overlay .hint').textContent = 'Touche ou appuie sur une touche pour commencer';
+            if (listenMode && !label) {
+                wordEl.textContent = '🔊';
+                document.getElementById('overlayLabel').textContent = isFinal()
+                    ? `🏆 Salle finale : écris tous les mots ! Mot ${finalIndex + 1}/${runWords.length}, écoute :`
+                    : 'Écoute bien le mot :';
+            } else {
+                currentWord.split(',').forEach((syllable, i) => {
+                    const span = document.createElement('span');
+                    if (i === 1) span.className = 's2';
+                    span.textContent = syllable;
+                    wordEl.appendChild(span);
+                });
+                document.getElementById('overlayLabel').textContent = label || (again ? 'Le voici encore :' : 'Regarde bien le mot :');
+            }
+            overlay.classList.add('visible');
+            paused = true;
+            held.clear();
+            if (listenMode) speak();
+        }
+
+        function hideWord() {
+            if (victory) {
+                startRun();
+                return;
+            }
+            document.getElementById('overlay').classList.remove('visible');
+            paused = false;
+        }
+
+        // ---------- Jeu ----------
+        function activate() {
+            if (paused || player.moving || fadeDir) return;
+            const tile = tiles.find(t => t.c === player.c && t.r === player.r);
+            if (!tile || pos >= target.length) return;
+
+            if (tile.letter === target[pos]) {
+                tile.flash = 1; tile.flashColor = '#7dff8a';
+                sounds.good();
+                pos++;
+                skipNonLetters();
+                renderSlots();
+                if (pos >= target.length) wordDone();
+            } else {
+                tile.flash = 1; tile.flashColor = '#ff4d4d';
+                sounds.bad();
+                shake = 1;
+                mistakes++;
+                hearts--;
+                renderHearts();
+                if (hearts === 0) {
+                    // Plus de cœurs : on remontre le mot et on recommence
+                    Progress.attempt(currentWord, false, 'donjon');
+                    setTimeout(() => {
+                        pos = 0;
+                        hearts = 3;
+                        skipNonLetters();
+                        renderSlots();
+                        renderHearts();
+                        showWord(true, 'Pas grave ! Le mot était :');
+                    }, 500);
+                }
+            }
+        }
+
+        function wordDone() {
+            Progress.attempt(currentWord, mistakes === 0, 'donjon');
+            addScore(mistakes === 0 ? 10 : 5);
+
+            if (!isFinal()) {
+                doorOpen = true;
+                setTimeout(sounds.door, 250);
+            } else if (finalIndex + 1 < runWords.length) {
+                finalIndex++;
+                renderRoomLabel();
+                setTimeout(() => startWord(runWords[finalIndex]), 700);
+            } else {
+                // Tous les mots retrouvés : le coffre s'ouvre
+                doorOpen = true;
+                victory = true;
+                addScore(20);
+                setTimeout(() => {
+                    sounds.door();
+                    const wordEl = document.getElementById('overlayWord');
+                    wordEl.textContent = '🏆';
+                    document.getElementById('overlayLabel').textContent =
+                        `Bravo ! Tu as retrouvé les ${runWords.length} mots du donjon !`;
+                    document.querySelector('#overlay .hint').textContent = 'Touche pour explorer un nouveau donjon';
+                    document.getElementById('overlay').classList.add('visible');
+                    paused = true;
+                    held.clear();
+                }, 600);
+            }
+        }
+
+        function walkable(c, r) {
+            if (doorOpen && !isFinal() && c === DOOR.c && r === DOOR.r) return true;
+            return c >= 1 && c <= COLS - 2 && r >= 1 && r <= ROWS - 2;
+        }
+
+        const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+
+        function update(dt) {
+            for (const tile of tiles) tile.flash = Math.max(0, tile.flash - dt / 400);
+            shake = Math.max(0, shake - dt / 250);
+
+            if (fadeDir) {
+                fade = Math.min(1, Math.max(0, fade + fadeDir * dt / 300));
+                if (fade === 1 && fadeDir === 1) {
+                    roomIndex++;
+                    enterRoom();
+                    fadeDir = -1;
+                } else if (fade === 0 && fadeDir === -1) {
+                    fadeDir = 0;
+                }
+                return;
+            }
+            if (paused) return;
+
+            if (player.moving) {
+                const m = player.moving;
+                m.t = Math.min(1, m.t + dt / 160);
+                player.x = (m.fc + (player.c - m.fc) * m.t) * T;
+                player.y = (m.fr + (player.r - m.fr) * m.t) * T;
+                if (m.t === 1) {
+                    player.moving = null;
+                    if (player.c === DOOR.c && player.r === DOOR.r) fadeDir = 1;
+                }
+                return;
+            }
+
+            const dir = [...held].pop();
+            if (!dir) return;
+            player.dir = dir;
+            const [dc, dr] = DIRS[dir];
+            const c = player.c + dc, r = player.r + dr;
+            if (walkable(c, r)) {
+                player.moving = { fc: player.c, fr: player.r, t: 0 };
+                player.c = c; player.r = r;
+                player.step++;
+                if (player.step % 2) sounds.step();
+            }
+        }
+
+        // ---------- Dessin ----------
+        const px = (x, y, w, h, color) => {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w * PX, h * PX);
+        };
+
+        function drawRoom(time) {
+            const pal = isFinal() ? TREASURE_PALETTE : PALETTES[roomIndex % PALETTES.length];
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const x = c * T, y = r * T;
+                    const wall = r === 0 || c === 0 || r === ROWS - 1 || c === COLS - 1;
+                    if (wall) {
+                        // briques
+                        px(x, y, 16, 16, pal.wall);
+                        for (let row = 0; row < 4; row++) {
+                            const offset = row % 2 ? 4 : 0;
+                            px(x, y + row * 4 * PX, 16, 1, pal.wall2);
+                            px(x + offset * PX, y + row * 4 * PX, 1, 4, pal.wall2);
+                            px(x + (offset + 8) * PX, y + row * 4 * PX, 1, 4, pal.wall2);
+                        }
+                    } else {
+                        // dalles de pierre en damier
+                        px(x, y, 16, 16, (r + c) % 2 ? pal.floor : pal.floor2);
+                        px(x, y, 16, 1, pal.line);
+                        px(x, y, 1, 16, pal.line);
+                        if ((r * 7 + c * 3) % 5 === 0) px(x + 5 * PX, y + 9 * PX, 3, 1, pal.line); // fissure
+                    }
+                }
+            }
+
+            // Porte, ou coffre au trésor dans la salle finale
+            const dx = DOOR.c * T, dy = DOOR.r * T;
+            if (isFinal()) {
+                px(dx + 2 * PX, dy + 6 * PX, 12, 9, '#7a4a1c');
+                px(dx + 2 * PX, dy + (doorOpen ? 3 : 6) * PX, 12, 3, '#9c6226');
+                px(dx + 2 * PX, dy + 9 * PX, 12, 1, '#ffd75e');
+                px(dx + 7 * PX, dy + 9 * PX, 2, 3, '#ffd75e');
+                if (doorOpen) px(dx + 4 * PX, dy + 6 * PX, 8, 2, '#fff3a0'); // éclat de l'or
+            } else if (doorOpen) {
+                px(dx + 2 * PX, dy + 2 * PX, 12, 14, '#000');
+            } else {
+                px(dx + 2 * PX, dy + 2 * PX, 12, 14, '#6b4423');
+                px(dx + 2 * PX, dy + 2 * PX, 12, 1, '#8a5a2b');
+                for (let i = 0; i < 3; i++) px(dx + (4 + i * 4) * PX, dy + 3 * PX, 1, 13, '#4e3119');
+                px(dx + 7 * PX, dy + 9 * PX, 2, 2, '#ffd75e'); // serrure
+            }
+
+            // Torches qui vacillent
+            [3, 9].forEach((c, i) => {
+                const tx = c * T, ty = 0;
+                px(tx + 7 * PX, ty + 8 * PX, 2, 6, '#5a3a1a');
+                const flicker = Math.sin(time / 90 + i * 2) > 0 ? 1 : 0;
+                px(tx + 6 * PX, ty + (4 - flicker) * PX, 4, 4, '#ff9d2e');
+                px(tx + 7 * PX, ty + (3 - flicker) * PX, 2, 3, '#ffe066');
+            });
+        }
+
+        function drawTiles() {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `${8 * PX}px OpenDyslexic, Arial, sans-serif`;
+            for (const tile of tiles) {
+                const x = tile.c * T, y = tile.r * T;
+                const pressed = tile.flash > 0.5;
+                const d = pressed ? PX : 0;
+                px(x + 1 * PX, y + 2 * PX, 14, 13, '#2a2333');           // ombre
+                px(x + 1 * PX, y + 1 * PX + d, 14, 13, '#c9b99a');       // bord clair
+                px(x + 2 * PX, y + 2 * PX + d, 12, 11, '#a8977a');       // plateau
+                if (tile.flash > 0) {
+                    ctx.globalAlpha = tile.flash;
+                    px(x + 2 * PX, y + 2 * PX + d, 12, 11, tile.flashColor);
+                    ctx.globalAlpha = 1;
+                }
+                ctx.fillStyle = '#2b2130';
+                ctx.fillText(tile.letter, x + T / 2, y + 7.5 * PX + d);
+            }
+        }
+
+        function drawPlayer(time) {
+            const sprite = player.dir === 'left' ? HERO.right : HERO[player.dir];
+            const flip = player.dir === 'left';
+            const bob = player.moving && Math.floor(time / 90) % 2 ? -PX : 0;
+            const ox = player.x + 2 * PX, oy = player.y + 1 * PX + bob;
+            px(player.x + 3 * PX, player.y + 14 * PX, 10, 2, 'rgba(0,0,0,0.35)'); // ombre
+            sprite.forEach((row, ry) => {
+                [...row].forEach((ch, rx) => {
+                    if (ch === '.') return;
+                    const col = flip ? 11 - rx : rx;
+                    px(ox + col * PX, oy + ry * PX, 1, 1, HERO_COLORS[ch]);
+                });
+            });
+        }
+
+        let last = performance.now();
+        function frame(time) {
+            const dt = Math.min(50, time - last);
+            last = time;
+            update(dt);
+
+            ctx.save();
+            if (shake) ctx.translate((Math.random() - 0.5) * 8 * shake, (Math.random() - 0.5) * 8 * shake);
+            drawRoom(time);
+            drawTiles();
+            drawPlayer(time);
+            ctx.restore();
+
+            if (fade) {
+                ctx.fillStyle = `rgba(0,0,0,${fade})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            requestAnimationFrame(frame);
+        }
+
+        // ---------- Commandes ----------
+        const KEYS = {
+            ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+            z: 'up', s: 'down', q: 'left', d: 'right', w: 'up', a: 'left'
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'SELECT') return;
+            if (paused && document.getElementById('overlay').classList.contains('visible')) {
+                e.preventDefault();
+                hideWord();
+                return;
+            }
+            const dir = KEYS[e.key] || KEYS[e.key.toLowerCase?.()];
+            if (dir) {
+                e.preventDefault();
+                held.delete(dir);
+                held.add(dir);
+            } else if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                activate();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            const dir = KEYS[e.key] || KEYS[e.key.toLowerCase?.()];
+            if (dir) held.delete(dir);
+        });
+
+        window.addEventListener('blur', () => held.clear());
+
+        document.querySelectorAll('.pad button').forEach(button => {
+            const dir = button.dataset.dir;
+            button.addEventListener('pointerdown', (e) => { e.preventDefault(); held.add(dir); });
+            ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+                button.addEventListener(ev, () => held.delete(dir)));
+        });
+        document.getElementById('aButton').addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            activate();
+        });
+
+        document.getElementById('overlay').addEventListener('click', hideWord);
+        document.getElementById('speakBtn').addEventListener('click', (e) => { e.currentTarget.blur(); speak(); });
+        document.getElementById('lookBtn').addEventListener('click', (e) => { e.currentTarget.blur(); showWord(true); });
+        document.getElementById('mode').addEventListener('change', (e) => { e.target.blur(); showWord(true); });
+
+        // ---------- Listes en ligne ----------
+        const onlineListSelect = document.getElementById('onlineList');
+        const listStatus = document.getElementById('listStatus');
+
+        async function loadOnlineLists() {
+            try {
+                const response = await fetch(API_BASE);
+                const data = await response.json();
+                if (data.success && data.lists.length > 0) {
+                    const lists = data.lists.filter(list => list.game === 'donjon' || list.game === 'all');
+                    lists.forEach(list => {
+                        const option = document.createElement('option');
+                        option.value = list.name;
+                        option.textContent = `☁️ ${list.name} (${list.wordCount} mots)`;
+                        onlineListSelect.appendChild(option);
+                    });
+                    listStatus.textContent = `${lists.length} liste(s)`;
+                }
+            } catch (error) {
+                listStatus.textContent = '⚠️ Hors ligne';
+            }
+        }
+
+        async function loadOnlineList(listName) {
+            try {
+                listStatus.textContent = '⏳';
+                const response = await fetch(`${API_BASE}/${encodeURIComponent(listName)}`);
+                const data = await response.json();
+                if (onlineListSelect.value !== listName) return; // une autre liste a été choisie entre-temps
+                if (data.success && data.list.words?.length) {
+                    words = data.list.words.map(w => w.trim()).filter(Boolean);
+                    listStatus.textContent = '✓';
+                    startRun();
+                } else {
+                    throw new Error('liste vide');
+                }
+            } catch (error) {
+                listStatus.textContent = '❌ Erreur';
+                onlineListSelect.value = '';
+                words = [...defaultWords];
+            }
+        }
+
+        onlineListSelect.addEventListener('change', (e) => {
+            e.target.blur();
+            if (e.target.value) {
+                loadOnlineList(e.target.value);
+            } else {
+                words = [...defaultWords];
+                startRun();
+            }
+        });
+
+        // ---------- Démarrage ----------
+        loadScore();
+        document.fonts.load(`${8 * PX}px OpenDyslexic`).finally(() => {
+            startRun();
+            requestAnimationFrame(frame);
+        });
+        loadOnlineLists();
+    </script>
+</body>
+</html>
