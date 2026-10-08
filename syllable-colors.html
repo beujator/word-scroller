@@ -513,12 +513,6 @@
 
         // Minuterie du passage au mot suivant : tant qu'elle court, le mot est bloqué
         let nextWordTimer = null;
-        let failedThisWord = false; // un mot raté puis réussi compte comme raté
-
-        function recordFailure() {
-            if (!failedThisWord) Progress.record(currentWord, false, 'colors');
-            failedThisWord = true;
-        }
 
         // Charger un nouveau mot
         function loadNewWord() {
@@ -529,7 +523,6 @@
                 return;
             }
             currentWord = Progress.next(words, currentWord);
-            failedThisWord = false;
             syllables = currentWord.split(',');
             selectedColor = null;
             letterColors = [];
@@ -637,7 +630,7 @@
                 const firstColor = syllableLetterColors[0];
                 if (!syllableLetterColors.every(color => color === firstColor)) {
                     showMessage('Chaque syllabe doit avoir une seule couleur !', 'error');
-                    recordFailure();
+                    Progress.attempt(currentWord, false, 'colors');
                     return;
                 }
 
@@ -649,14 +642,14 @@
             const uniqueColors = new Set(syllableColors);
             if (uniqueColors.size !== syllableColors.length) {
                 showMessage('Chaque syllabe doit avoir une couleur différente !', 'error');
-                recordFailure();
+                Progress.attempt(currentWord, false, 'colors');
                 return;
             }
 
             // Bonne réponse !
             score += 10;
             saveScore();
-            if (!failedThisWord) Progress.record(currentWord, true, 'colors');
+            Progress.attempt(currentWord, true, 'colors');
             showMessage('✓ Bravo ! Toutes les syllabes sont bien coloriées !', 'success');
 
             // Animations de célébration

@@ -548,7 +548,6 @@
 
         // Minuterie du passage au mot suivant : tant qu'elle court, le mot est bloqué
         let nextWordTimer = null;
-        let failedThisWord = false; // un mot raté puis réussi compte comme raté
 
         // Charger un nouveau mot
         function loadNewWord() {
@@ -560,7 +559,6 @@
             }
 
             currentWord = Progress.next(words, currentWord);
-            failedThisWord = false;
             currentSyllables = currentWord.split(',');
             assembledSyllables = [];
             message.textContent = '';
@@ -644,7 +642,7 @@
                 // Bonne réponse!
                 score += 10;
                 saveScore();
-                if (!failedThisWord) Progress.record(currentWord, true, 'rocket');
+                Progress.attempt(currentWord, true, 'rocket');
                 showMessage('✓ Bravo! Décollage! 🚀', 'green');
 
                 // Lancer la grosse fusée
@@ -654,8 +652,7 @@
                 nextWordTimer = setTimeout(loadNewWord, 3500);
             } else {
                 showMessage('✗ Essaie encore!', 'red');
-                if (!failedThisWord) Progress.record(currentWord, false, 'rocket');
-                failedThisWord = true;
+                Progress.attempt(currentWord, false, 'rocket');
             }
         }
 

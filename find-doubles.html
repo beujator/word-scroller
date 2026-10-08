@@ -565,28 +565,12 @@
                     setTimeout(() => {
                         generateGame();
                     }, 1500);
-                } else if (wordA === wordB) {
-                    // Même mot mais pas le bon double
-                    selectedWords.A.classList.remove('selected');
-                    selectedWords.B.classList.remove('selected');
-                    selectedWords.A.classList.add('wrong');
-                    selectedWords.B.classList.add('wrong');
-                    messageElement.textContent = '❌ Ce n\'est pas le bon double!';
-                    messageElement.style.color = '#f87171';
-
-                    // Bloquer les clics le temps de l'animation
-                    isWaiting = true;
-                    setTimeout(() => {
-                        isWaiting = false;
-                        selectedWords.A.classList.remove('wrong');
-                        selectedWords.B.classList.remove('wrong');
-                        selectedWords = { A: null, B: null };
-                    }, 500);
                 } else {
-                    // Deux mots différents
-                    messageElement.textContent = '❌ Les mots ne sont pas identiques!';
+                    // Même mot mais pas le bon double, ou deux mots différents
+                    messageElement.textContent = wordA === wordB
+                        ? '❌ Ce n\'est pas le bon double!'
+                        : '❌ Les mots ne sont pas identiques!';
                     messageElement.style.color = '#f87171';
-
                     selectedWords.A.classList.add('wrong');
                     selectedWords.B.classList.add('wrong');
 
@@ -623,12 +607,12 @@
                 .map(w => w.trim())
                 .filter(w => w.length > 0);
 
-            if (inputWords.length >= 9) {
+            if (new Set(inputWords).size >= 9) {
                 saveWords(inputWords);
                 generateGame();
                 alert('Mots sauvegardés avec succès!');
             } else {
-                alert('Veuillez entrer au moins 9 mots.');
+                alert('Veuillez entrer au moins 9 mots différents.');
             }
         });
 

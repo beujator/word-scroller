@@ -6,6 +6,7 @@ const Progress = (() => {
     const KEY = 'orthoProgress';
     const DAYS = [0, 0, 1, 3, 7, 14]; // délai avant révision, par boîte (1 à 5)
     const DAY = 24 * 60 * 60 * 1000;
+    let attempted = null; // mot déjà noté depuis le dernier tirage
 
     // « ba,teau » et « Bateau » désignent le même mot
     const key = word => word.replace(/,/g, '').trim().normalize('NFC').toLowerCase();
@@ -39,6 +40,14 @@ const Progress = (() => {
         save(data);
     }
 
+    // Seul le premier résultat compte : un mot raté puis réussi reste raté.
+    // Le verrou se lève au prochain tirage (next / order).
+    function attempt(word, success, game) {
+        if (key(word) === attempted) return;
+        attempted = key(word);
+        record(word, success, game);
+    }
+
     function shuffle(array) {
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -51,11 +60,12 @@ const Progress = (() => {
     // Ordonne la liste : d'abord les mots à revoir (jamais vus, ratés, échéance passée),
     // dans le désordre, puis les autres par échéance la plus proche.
     function order(words) {
+        attempted = null;
         const data = all();
         const now = Date.now();
-        const due = w => data[key(w)]?.due ?? 0;
-        const toReview = shuffle(words.filter(w => due(w) <= now));
-        const later = words.filter(w => due(w) > now).sort((a, b) => due(a) - due(b));
+        const dueOf = new Map(words.map(w => [w, data[key(w)]?.due ?? 0]));
+        const toReview = shuffle(words.filter(w => dueOf.get(w) <= now));
+        const later = words.filter(w => dueOf.get(w) > now).sort((a, b) => dueOf.get(a) - dueOf.get(b));
         return [...toReview, ...later];
     }
 
@@ -69,5 +79,5 @@ const Progress = (() => {
         localStorage.removeItem(KEY);
     }
 
-    return { all, record, order, next, reset, shuffle, DAYS };
+    return { all, attempt, order, next, reset };
 })();

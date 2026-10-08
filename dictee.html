@@ -690,16 +690,6 @@
             scoreValue.textContent = score;
         }
 
-        // Mélanger un tableau
-        function shuffle(array) {
-            const shuffled = [...array];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            return shuffled;
-        }
-
         // Normaliser le texte : minuscules, apostrophes et espaces unifiés.
         // Les accents comptent : « fete » n'est pas « fête ».
         function normalizeText(text) {
@@ -887,7 +877,7 @@
                 feedback.className = 'feedback correct';
                 score++;
                 saveScore();
-                Progress.record(currentWord, true, 'dictee');
+                Progress.attempt(currentWord, true, 'dictee');
 
                 // Animations de célébration
                 window.confetti?.({
@@ -916,7 +906,7 @@
                 correctWord.textContent = `Le mot était : ${currentWord}`;
                 correctWord.classList.add('visible');
 
-                Progress.record(currentWord, false, 'dictee');
+                Progress.attempt(currentWord, false, 'dictee');
                 mistakes.push({
                     word: currentWord,
                     userAnswer: userAnswer
