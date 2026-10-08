@@ -322,7 +322,7 @@
         // ---------- Données ----------
         const API_BASE = window.location.origin + '/api/lists';
         const defaultWords = [
-            'ma,ison', 'cha,teau', 'dra,gon', 'é,pée', 'tré,sor',
+            'mai,son', 'châ,teau', 'dra,gon', 'é,pée', 'tré,sor',
             'clé', 'por,te', 'bou,clier', 'la,pin', 'fo,rêt'
         ];
 
@@ -474,15 +474,7 @@
         };
 
         // ---------- Voix ----------
-        function speak() {
-            if (!window.speechSynthesis) return;
-            speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(currentWord.replace(/,/g, ''));
-            utterance.lang = 'fr-FR';
-            const voice = speechSynthesis.getVoices().find(v => v.lang.startsWith('fr'));
-            if (voice) utterance.voice = voice;
-            speechSynthesis.speak(utterance);
-        }
+        const speak = () => Speech.say(currentWord);
 
         // ---------- Donjon ----------
         const isFinal = () => roomIndex >= runWords.length;
@@ -490,6 +482,7 @@
         // Un donjon = RUN_SIZE salles (un mot chacune), puis la salle finale avec tous les mots
         function startRun() {
             runWords = [...new Set(Progress.order(words))].slice(0, RUN_SIZE);
+            runWords.forEach(Speech.prepare); // audio prêt pour toutes les salles
             roomIndex = 0;
             victory = false;
             enterRoom();
