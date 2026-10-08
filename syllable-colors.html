@@ -482,10 +482,9 @@
 
         // Charger les mots
         function loadWords() {
-            const savedWords = localStorage.getItem('syllableColorsWords');
-            if (savedWords) {
-                words = JSON.parse(savedWords);
-            } else {
+            try {
+                words = JSON.parse(localStorage.getItem('syllableColorsWords')) || [...defaultWords];
+            } catch {
                 words = [...defaultWords];
             }
         }
@@ -511,8 +510,17 @@
             scoreValue.textContent = score;
         }
 
+        // Minuterie du passage au mot suivant : tant qu'elle court, le mot est bloqué
+        let nextWordTimer = null;
+
         // Charger un nouveau mot
         function loadNewWord() {
+            clearTimeout(nextWordTimer);
+            nextWordTimer = null;
+            if (words.length === 0) {
+                message.textContent = 'Aucun mot disponible !';
+                return;
+            }
             currentWord = words[Math.floor(Math.random() * words.length)];
             syllables = currentWord.split(',');
             selectedColor = null;
@@ -602,6 +610,7 @@
 
         // Vérifier la réponse
         function checkAnswer() {
+            if (nextWordTimer) return;
             // Vérifier que toutes les lettres sont coloriées
             if (letterColors.some(color => color === null)) {
                 showMessage('Colorie toutes les lettres !', 'error');
@@ -640,7 +649,7 @@
             showMessage('✓ Bravo ! Toutes les syllabes sont bien coloriées !', 'success');
 
             // Animations de célébration
-            confetti({
+            window.confetti?.({
                 particleCount: 100,
                 spread: 70,
                 origin: { y: 0.6 }
@@ -648,9 +657,7 @@
             launchRocket();
 
             // Charger le mot suivant automatiquement
-            setTimeout(() => {
-                loadNewWord();
-            }, 2000);
+            nextWordTimer = setTimeout(loadNewWord, 2000);
         }
 
         // Afficher un message

@@ -661,9 +661,9 @@
         // Charger les mots
         function loadWords() {
             const savedWords = localStorage.getItem('dicteeWords');
-            if (savedWords) {
-                words = JSON.parse(savedWords);
-            } else {
+            try {
+                words = JSON.parse(savedWords) || [...defaultWords];
+            } catch {
                 words = [...defaultWords];
             }
         }
@@ -699,12 +699,13 @@
             return shuffled;
         }
 
-        // Normaliser le texte (enlever accents, mettre en minuscules)
+        // Normaliser le texte : minuscules, apostrophes et espaces unifiés.
+        // Les accents comptent : « fete » n'est pas « fête ».
         function normalizeText(text) {
-            return text.toLowerCase()
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .replace(/[^a-z0-9]/g, '');
+            return text.normalize('NFC').toLowerCase()
+                .replace(/[’‘]/g, "'")
+                .replace(/\s+/g, ' ')
+                .trim();
         }
 
         // Générer la silhouette d'un mot
@@ -786,33 +787,6 @@
             }
         }
 
-        // Trouver la meilleure voix française
-        function getBestFrenchVoice() {
-          console.log(speechSynthesis.getVoices().filter(v => v.lang.startsWith('fr')).map(v => v.name)
-          )
-          const voices = synth.getVoices();
-
-          // Voix premium iOS (plus naturelles)
-          const premiumVoices = ['Thomas', 'Amelie', 'Audrey'];
-
-          for (const name of premiumVoices) {
-            const voice = voices.find(v =>
-              v.lang.startsWith('fr') && v.name.includes(name)
-            );
-            if (voice) {
-              console.log('Voix premium trouvée:', voice.name);
-              return voice;
-            }
-          }
-
-          // Fallback : n'importe quelle voix française
-          const fallback = voices.find(v => v.lang === 'fr-FR') ||
-            voices.find(v => v.lang.startsWith('fr'));
-
-          console.log('Voix fallback:', fallback?.name || 'Aucune');
-          return fallback;
-        }
-
         function loadVoices() {
           const voices = synth.getVoices();
 
@@ -823,7 +797,6 @@
             voices.find(v => v.name === 'Thomas') ||
             voices.find(v => v.lang.startsWith('fr'));
 
-          console.log('Voix sélectionnée:', voiceFR?.name, voiceFR?.voiceURI);
         }
 
         // Dire le mot
@@ -836,14 +809,9 @@
           setTimeout(() => {
             const utterance = new SpeechSynthesisUtterance(currentWord);
 
-            // Recharger les voix (iOS bug fix)
-            const voices = synth.getVoices();
-            const frenchVoice = voices.find(v => v.lang === 'fr-FR') ||
-              voices.find(v => v.lang.startsWith('fr'));
-
-            if (frenchVoice) {
-              utterance.voice = frenchVoice;
-            }
+            utterance.lang = 'fr-FR';
+            if (!voiceFR) loadVoices(); // iOS : voix parfois pas encore prêtes
+            if (voiceFR) utterance.voice = voiceFR;
 
             speakBtn.classList.add('speaking');
 
@@ -920,7 +888,7 @@
                 saveScore();
 
                 // Animations de célébration
-                confetti({
+                window.confetti?.({
                     particleCount: 100,
                     spread: 70,
                     origin: { y: 0.6 }
@@ -973,12 +941,17 @@
             totalWords.textContent = currentWords.length;
 
             if (mistakes.length > 0) {
-                mistakesList.innerHTML = '<h3>Erreurs :</h3>' +
-                    mistakes.map(m => `
-                        <div class="mistake-item">
-                            Mot: <strong>${m.word}</strong> - Tu as écrit: <em>${m.userAnswer}</em>
-                        </div>
-                    `).join('');
+                mistakesList.innerHTML = '<h3>Erreurs :</h3>';
+                mistakes.forEach(m => {
+                    const item = document.createElement('div');
+                    item.className = 'mistake-item';
+                    const word = document.createElement('strong');
+                    word.textContent = m.word;
+                    const answer = document.createElement('em');
+                    answer.textContent = m.userAnswer;
+                    item.append('Mot: ', word, ' - Tu as écrit: ', answer);
+                    mistakesList.appendChild(item);
+                });
             } else {
                 mistakesList.innerHTML = '<h3 style="color: #22c55e;">🎉 Aucune erreur ! Parfait !</h3>';
             }

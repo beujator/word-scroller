@@ -494,10 +494,9 @@
 
         // Charger les mots
         function loadWords() {
-            const savedWords = localStorage.getItem('rocketWords');
-            if (savedWords) {
-                words = JSON.parse(savedWords);
-            } else {
+            try {
+                words = JSON.parse(localStorage.getItem('rocketWords')) || [...defaultWords];
+            } catch {
                 words = [...defaultWords];
             }
         }
@@ -546,8 +545,13 @@
             return shuffled;
         }
 
+        // Minuterie du passage au mot suivant : tant qu'elle court, le mot est bloqué
+        let nextWordTimer = null;
+
         // Charger un nouveau mot
         function loadNewWord() {
+            clearTimeout(nextWordTimer);
+            nextWordTimer = null;
             if (words.length === 0) {
                 message.textContent = 'Aucun mot disponible!';
                 return;
@@ -587,7 +591,7 @@
 
         // Sélectionner une syllabe
         function selectSyllable(rocketElement, syllable, shuffleIndex) {
-            if (rocketElement.classList.contains('used')) return;
+            if (nextWordTimer || rocketElement.classList.contains('used')) return;
 
             // Ajouter la syllabe à l'assemblage
             assembledSyllables.push(syllable);
@@ -625,6 +629,7 @@
 
         // Vérifier la réponse
         function checkAnswer() {
+            if (nextWordTimer) return;
             if (assembledSyllables.length !== currentSyllables.length) {
                 showMessage('⚠️ Complète le mot d\'abord!', 'orange');
                 return;
@@ -642,9 +647,7 @@
                 launchBigRocket();
 
                 // Charger le mot suivant après l'animation
-                setTimeout(() => {
-                    loadNewWord();
-                }, 3500);
+                nextWordTimer = setTimeout(loadNewWord, 3500);
             } else {
                 showMessage('✗ Essaie encore!', 'red');
             }
