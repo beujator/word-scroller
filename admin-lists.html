@@ -333,6 +333,7 @@
                         <option value="scroller">Défileur de Mots</option>
                         <option value="doubles">Trouve les Doubles</option>
                         <option value="dictee">Dictée</option>
+                        <option value="snowman">Pendu</option>
                     </select>
                     <div class="form-help">Sélectionnez le jeu pour lequel cette liste est destinée</div>
                 </div>
@@ -359,15 +360,7 @@
         // Charger le token depuis sessionStorage au démarrage
         window.addEventListener('DOMContentLoaded', () => {
             const savedToken = sessionStorage.getItem('adminToken');
-            // Vérifier que le token n'est pas un JSON ou un message d'erreur
-            if (savedToken && !savedToken.startsWith('{') && savedToken.length > 10) {
-                currentToken = savedToken;
-                showAuthenticatedUI();
-                loadLists();
-            } else if (savedToken) {
-                // Token corrompu, nettoyer
-                sessionStorage.removeItem('adminToken');
-            }
+            if (savedToken) login(savedToken);
         });
 
         // Authentification
@@ -377,25 +370,52 @@
                 showStatus('Veuillez entrer un token', 'error');
                 return;
             }
+            login(token);
+        }
 
-            // Vérifier que le token n'est pas un JSON
-            if (token.startsWith('{')) {
-                showStatus('Token invalide (ne collez pas le message d\'erreur)', 'error');
+        // fetch avec le token admin ; un 401 déconnecte et renvoie null
+        async function authFetch(url, options = {}, token = currentToken) {
+            const response = await fetch(url, {
+                ...options,
+                headers: { ...options.headers, 'Authorization': `Bearer ${token}` }
+            });
+            if (response.status === 401) {
+                setAuthenticatedUI(false);
+                showStatus('Token refusé, reconnectez-vous', 'error');
+                return null;
+            }
+            return response;
+        }
+
+        // Vérifie le token auprès du serveur avant d'ouvrir l'admin
+        async function login(token) {
+            try {
+                const response = await authFetch(API_BASE, { method: 'POST' }, token);
+                if (!response) return;
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            } catch (error) {
+                console.error('Erreur:', error);
+                showStatus('Erreur de connexion à l\'API', 'error');
                 return;
             }
 
             currentToken = token;
             sessionStorage.setItem('adminToken', token);
-            showAuthenticatedUI();
+            setAuthenticatedUI(true);
             loadLists();
         }
 
-        function showAuthenticatedUI() {
-            document.getElementById('auth-section').classList.add('authenticated');
-            document.getElementById('auth-status').textContent = '✓ Authentifié';
-            document.getElementById('admin-token').style.display = 'none';
-            document.getElementById('auth-section').querySelector('button').style.display = 'none';
-            document.getElementById('admin-content').classList.add('visible');
+        function setAuthenticatedUI(on) {
+            if (!on) {
+                currentToken = null;
+                sessionStorage.removeItem('adminToken');
+            }
+            const section = document.getElementById('auth-section');
+            section.classList.toggle('authenticated', on);
+            document.getElementById('auth-status').textContent = on ? '✓ Authentifié' : 'Veuillez entrer votre token d\'administration';
+            document.getElementById('admin-token').style.display = on ? 'none' : '';
+            section.querySelector('button').style.display = on ? 'none' : '';
+            document.getElementById('admin-content').classList.toggle('visible', on);
         }
 
         // Charger toutes les listes
@@ -519,20 +539,13 @@
             };
 
             try {
-                console.log('Token utilisé:', currentToken);
-                console.log('Headers:', {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${currentToken}`
-                });
-
-                const response = await fetch(`${API_BASE}/${encodeURIComponent(name)}`, {
+                const response = await authFetch(`${API_BASE}/${encodeURIComponent(name)}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${currentToken}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(listData)
                 });
+
+                if (!response) return;
 
                 const data = await response.json();
 
@@ -556,12 +569,11 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE}/${encodeURIComponent(listName)}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${currentToken}`
-                    }
+                const response = await authFetch(`${API_BASE}/${encodeURIComponent(listName)}`, {
+                    method: 'DELETE'
                 });
+
+                if (!response) return;
 
                 const data = await response.json();
 
@@ -602,7 +614,8 @@
                 'rocket': 'Fusée',
                 'scroller': 'Défileur',
                 'doubles': 'Doubles',
-                'dictee': 'Dictée'
+                'dictee': 'Dictée',
+                'snowman': 'Pendu'
             };
             return labels[game] || game;
         }

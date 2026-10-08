@@ -406,10 +406,9 @@
 
         // Charger les mots depuis localStorage
         function loadWords() {
-            const savedWords = localStorage.getItem('doubleFinderWords');
-            if (savedWords) {
-                words = JSON.parse(savedWords);
-            } else {
+            try {
+                words = JSON.parse(localStorage.getItem('doubleFinderWords')) || [...defaultWords];
+            } catch {
                 words = [...defaultWords];
             }
         }
@@ -451,8 +450,11 @@
 
         // Générer une nouvelle partie
         function generateGame() {
-            if (words.length < 11) {
-                messageElement.textContent = '⚠️ Il faut au moins 11 mots dans la liste!';
+            const uniqueWords = [...new Set(words)];
+            if (uniqueWords.length < 9) {
+                listAElement.innerHTML = '';
+                listBElement.innerHTML = '';
+                messageElement.textContent = '⚠️ Il faut au moins 9 mots différents dans la liste!';
                 messageElement.style.color = '#f87171';
                 return;
             }
@@ -462,7 +464,7 @@
             selectedWords = { A: null, B: null };
 
             // Mélanger les mots
-            const shuffledWords = shuffle(words);
+            const shuffledWords = shuffle(uniqueWords);
 
             // Sélectionner le mot double
             currentDouble = shuffledWords[0];
@@ -562,31 +564,19 @@
                     setTimeout(() => {
                         generateGame();
                     }, 1500);
-                } else if (wordA === wordB) {
-                    // Même mot mais pas le bon double
-                    selectedWords.A.classList.remove('selected');
-                    selectedWords.B.classList.remove('selected');
-                    selectedWords.A.classList.add('wrong');
-                    selectedWords.B.classList.add('wrong');
-                    messageElement.textContent = '❌ Ce n\'est pas le bon double!';
-                    messageElement.style.color = '#f87171';
-
-                    // Retirer les classes et réinitialiser après l'animation
-                    setTimeout(() => {
-                        selectedWords.A.classList.remove('wrong');
-                        selectedWords.B.classList.remove('wrong');
-                        selectedWords = { A: null, B: null };
-                    }, 500);
                 } else {
-                    // Deux mots différents
-                    messageElement.textContent = '❌ Les mots ne sont pas identiques!';
+                    // Même mot mais pas le bon double, ou deux mots différents
+                    messageElement.textContent = wordA === wordB
+                        ? '❌ Ce n\'est pas le bon double!'
+                        : '❌ Les mots ne sont pas identiques!';
                     messageElement.style.color = '#f87171';
-
                     selectedWords.A.classList.add('wrong');
                     selectedWords.B.classList.add('wrong');
 
-                    // Retirer les classes et réinitialiser après l'animation
+                    // Bloquer les clics le temps de l'animation
+                    isWaiting = true;
                     setTimeout(() => {
+                        isWaiting = false;
                         selectedWords.A.classList.remove('selected', 'wrong');
                         selectedWords.B.classList.remove('selected', 'wrong');
                         selectedWords = { A: null, B: null };
@@ -616,12 +606,12 @@
                 .map(w => w.trim())
                 .filter(w => w.length > 0);
 
-            if (inputWords.length >= 11) {
+            if (new Set(inputWords).size >= 9) {
                 saveWords(inputWords);
                 generateGame();
                 alert('Mots sauvegardés avec succès!');
             } else {
-                alert('Veuillez entrer au moins 11 mots.');
+                alert('Veuillez entrer au moins 9 mots différents.');
             }
         });
 
@@ -722,7 +712,7 @@
                 updateScoreDisplay();
                 saveScore();
                 messageElement.textContent = 'Score réinitialisé!';
-                messageElement.style.color = 'white';
+                messageElement.style.color = '#2c3e50';
             }
         });
 

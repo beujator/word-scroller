@@ -25,7 +25,6 @@ Collection de jeux éducatifs pour l'orthophonie avec police OpenDyslexic et dé
 - Deux colonnes : calculs et résultats
 - Associez-les correctement et ils disparaissent
 - Génération automatique d'additions ou multiplications
-- Assistant IA local pour générer des encouragements personnalisés
 - Système de score
 
 ### 4. Memory

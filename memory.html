@@ -435,6 +435,7 @@
 
         // Variables
         let symbols = [];
+        let fullList = []; // liste complète en cours (locale ou en ligne)
         let cards = [];
         let flippedCards = [];
         let matchedPairs = 0;
@@ -468,22 +469,28 @@
         const API_BASE = window.location.origin + '/api/lists';
 
         // Charger les symboles
-        function loadSymbols() {
-            const savedSymbols = localStorage.getItem('memorySymbols');
-            let symbolFullList;
-            if (savedSymbols) {
-              symbolFullList = JSON.parse(savedSymbols);
-            } else {
-              symbolFullList = [...defaultSymbols];
+        function localList() {
+            try {
+                return JSON.parse(localStorage.getItem('memorySymbols')) || [...defaultSymbols];
+            } catch {
+                return [...defaultSymbols];
             }
-            symbols = shuffle(symbolFullList).slice(0,9);
-            console.log(symbols.length)
         }
 
-        // Sauvegarder les symboles
+        // Tire 9 mots de la liste complète pour une partie
+        function pickSymbols() {
+            symbols = shuffle([...new Set(fullList)]).slice(0, 9);
+        }
+
+        function loadSymbols() {
+            fullList = localList();
+            pickSymbols();
+        }
+
+        // Sauvegarder la liste complète
         function saveSymbols(symbolList) {
-            symbols = shuffle(symbolList).slice(0,9);
-            localStorage.setItem('memorySymbols', JSON.stringify(symbols));
+            localStorage.setItem('memorySymbols', JSON.stringify(symbolList));
+            loadSymbols();
         }
 
         // Charger le score
@@ -513,16 +520,18 @@
 
         // Formater un mot avec les syllabes colorées
         function formatWord(word) {
-            const syllables = word.split(',');
-            let html = '';
-            syllables.forEach((syllable, index) => {
+            const container = document.createElement('div');
+            word.split(',').forEach((syllable, index) => {
                 if (index === 1) {
-                    html += `<span class="syllable-2">${syllable}</span>`;
+                    const span = document.createElement('span');
+                    span.className = 'syllable-2';
+                    span.textContent = syllable;
+                    container.appendChild(span);
                 } else {
-                    html += syllable;
+                    container.appendChild(document.createTextNode(syllable));
                 }
             });
-            return html;
+            return container;
         }
 
         // Créer le plateau de jeu
@@ -550,9 +559,7 @@
 
                 const cardBack = document.createElement('div');
                 cardBack.className = 'card-face card-back';
-                const wordContainer = document.createElement('div');
-                wordContainer.innerHTML = formatWord(symbol);
-                cardBack.appendChild(wordContainer);
+                cardBack.appendChild(formatWord(symbol));
 
                 card.appendChild(cardFront);
                 card.appendChild(cardBack);
@@ -619,8 +626,11 @@
                     score += pointsEarned;
                     saveScore();
 
+                    flippedCards = [];
+                    canFlip = true;
+
                     // Explosion de confettis!
-                    confetti({
+                    window.confetti?.({
                         particleCount: 100,
                         spread: 70,
                         origin: { y: 0.6 }
@@ -628,15 +638,12 @@
 
                     showMessage(`✓ Bravo! +${pointsEarned} points`, 'green');
 
-                    flippedCards = [];
-                    canFlip = true;
-
                     // Vérifier si toutes les paires sont trouvées
                     if (matchedPairs === symbols.length) {
                         setTimeout(() => {
                             showMessage(`🎉 Partie terminée en ${moves} coups!`, 'green');
                             // Encore plus de confettis pour la fin!
-                            confetti({
+                            window.confetti?.({
                                 particleCount: 200,
                                 spread: 100,
                                 origin: { y: 0.6 }
@@ -681,7 +688,7 @@
 
         // Camion de pompier - retourne toutes les cartes
         function showFireTruck() {
-            if (!canFlip) return; // Ne pas lancer si déjà en cours
+            if (!canFlip || flippedCards.length > 0) return; // Pas pendant un tour en cours
             if (fireTruckUses <= 0) return; // Plus d'utilisations disponibles
 
             fireTruckUses--;
@@ -748,7 +755,8 @@
                 const data = await response.json();
 
                 if (data.success && data.list.words) {
-                    symbols = shuffle(data.list.words).slice(0,9);
+                    fullList = data.list.words;
+                    pickSymbols();
                     createBoard();
                     listStatus.textContent = '✓ Liste chargée';
 
@@ -790,15 +798,7 @@
 
         // Nouvelle partie
         newGameBtn.addEventListener('click', () => {
-            // Recharger et mélanger les symboles
-            const savedSymbols = localStorage.getItem('memorySymbols');
-            let symbolFullList;
-            if (savedSymbols) {
-                symbolFullList = JSON.parse(savedSymbols);
-            } else {
-                symbolFullList = [...defaultSymbols];
-            }
-            symbols = shuffle(symbolFullList).slice(0,9);
+            pickSymbols(); // nouveau tirage dans la liste en cours
             createBoard();
         });
 
@@ -809,7 +809,7 @@
         adminToggle.addEventListener('click', () => {
             adminPanel.classList.toggle('visible');
             if (adminPanel.classList.contains('visible')) {
-                pairsInput.value = symbols.join('\n');
+                pairsInput.value = localList().join('\n');
             }
         });
 
@@ -838,7 +838,7 @@
         resetPairsBtn.addEventListener('click', () => {
             if (confirm('Voulez-vous vraiment réinitialiser la liste aux symboles par défaut?')) {
                 saveSymbols([...defaultSymbols]);
-                pairsInput.value = symbols.join('\n');
+                pairsInput.value = localList().join('\n');
                 createBoard();
                 alert('Liste réinitialisée!');
             }

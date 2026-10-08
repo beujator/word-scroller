@@ -23,6 +23,16 @@ function isAuthorized(request, env) {
   return token === env.ADMIN_TOKEN;
 }
 
+function unauthorized() {
+  return new Response(JSON.stringify({
+    success: false,
+    error: 'Non autorisé'
+  }), {
+    status: 401,
+    headers: CORS_HEADERS
+  });
+}
+
 // Récupère l'index de toutes les listes
 async function getIndex(env) {
   const indexData = await env.WORD_LISTS.get(INDEX_KEY);
@@ -70,13 +80,7 @@ async function handleGetList(env, name) {
 // Gère POST /api/lists/:name - Crée ou met à jour une liste
 async function handleCreateOrUpdateList(request, env, name) {
   if (!isAuthorized(request, env)) {
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Non autorisé'
-    }), {
-      status: 401,
-      headers: CORS_HEADERS
-    });
+    return unauthorized();
   }
 
   let body;
@@ -93,10 +97,12 @@ async function handleCreateOrUpdateList(request, env, name) {
   }
 
   // Validation des données
-  if (!body.words || !Array.isArray(body.words) || body.words.length === 0) {
+  const validWords = Array.isArray(body.words) &&
+    body.words.every(w => typeof w === 'string' && w.trim() && w.length <= 100);
+  if (!validWords || body.words.length === 0) {
     return new Response(JSON.stringify({
       success: false,
-      error: 'Le champ "words" est requis et doit être un tableau non vide'
+      error: 'Le champ "words" doit être un tableau non vide de mots (100 caractères max)'
     }), {
       status: 400,
       headers: CORS_HEADERS
@@ -113,7 +119,7 @@ async function handleCreateOrUpdateList(request, env, name) {
     name: name,
     description: body.description || '',
     game: body.game || 'all',
-    words: body.words,
+    words: body.words.map(w => w.trim()),
     createdAt: isUpdate ? JSON.parse(existingList).createdAt : now,
     updatedAt: now
   };
@@ -154,13 +160,7 @@ async function handleCreateOrUpdateList(request, env, name) {
 // Gère DELETE /api/lists/:name - Supprime une liste
 async function handleDeleteList(request, env, name) {
   if (!isAuthorized(request, env)) {
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Non autorisé'
-    }), {
-      status: 401,
-      headers: CORS_HEADERS
-    });
+    return unauthorized();
   }
 
   // Vérifier si la liste existe
@@ -210,6 +210,12 @@ export async function onRequest(context) {
     // Route : GET /api/lists (liste toutes les listes)
     if (request.method === 'GET' && (!path || path === '')) {
       return await handleListAll(env);
+    }
+
+    // Route : POST /api/lists (sans nom) - vérifie le token admin
+    if (request.method === 'POST' && !path) {
+      if (!isAuthorized(request, env)) return unauthorized();
+      return new Response(JSON.stringify({ success: true }), { headers: CORS_HEADERS });
     }
 
     // Route : GET /api/lists/:name (récupère une liste)
