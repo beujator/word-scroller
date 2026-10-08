@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progrès - Jeux d'Orthophonie</title>
+    <style>
+        @font-face {
+            font-family: 'OpenDyslexic';
+            src: url('OpenDyslexicAlta-Regular.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'OpenDyslexic', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            color: #2c3e50;
+            min-height: 100vh;
+            padding: 20px 16px;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .home-link {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin: 20px 0 10px;
+        }
+
+        .intro {
+            color: #4a5568;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            background: white;
+            border: 2px solid rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 28px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #edf2f7;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #f1f5f9;
+            font-size: 14px;
+        }
+
+        .box {
+            display: inline-block;
+            min-width: 28px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .box-1 { background: #fee2e2; color: #991b1b; }
+        .box-2 { background: #ffedd5; color: #9a3412; }
+        .box-3 { background: #fef9c3; color: #854d0e; }
+        .box-4 { background: #dcfce7; color: #166534; }
+        .box-5 { background: #bbf7d0; color: #14532d; }
+
+        .due {
+            color: #b91c1c;
+            font-weight: bold;
+        }
+
+        .empty {
+            padding: 30px;
+            text-align: center;
+            color: #4a5568;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            background: #ef4444;
+            color: white;
+            font-family: inherit;
+            font-size: 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <a href="index.html" class="home-link">← Retour au menu</a>
+        <h1>📈 Progrès des mots</h1>
+        <p class="intro">
+            Chaque mot réussi monte d'une boîte (1 à 5) et revient de moins en moins souvent ;
+            un mot raté retourne en boîte 1. Les jeux proposent d'abord les mots à revoir.
+            Suivi enregistré sur cet appareil uniquement (Dictée, Fusée, Coloriage, Pendu).
+        </p>
+
+        <div class="summary" id="summary"></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mot</th>
+                        <th>Boîte</th>
+                        <th>Réussites</th>
+                        <th>Erreurs</th>
+                        <th>Dernier essai</th>
+                        <th>À revoir</th>
+                    </tr>
+                </thead>
+                <tbody id="rows"></tbody>
+            </table>
+        </div>
+
+        <button id="reset">Effacer le suivi</button>
+    </main>
+
+    <script src="common.js"></script>
+    <script>
+        const fmt = ts => new Date(ts).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+
+        function cell(row, content, className) {
+            const td = document.createElement('td');
+            if (content instanceof Node) td.appendChild(content);
+            else td.textContent = content;
+            if (className) td.className = className;
+            row.appendChild(td);
+        }
+
+        function render() {
+            const data = Progress.all();
+            const now = Date.now();
+            // Les mots les plus fragiles en premier
+            const words = Object.entries(data).sort(([, a], [, b]) => a.box - b.box || b.ko - a.ko);
+
+            const summary = document.getElementById('summary');
+            summary.textContent = '';
+            const stats = [
+                ['Mots suivis', words.length],
+                ['À revoir', words.filter(([, e]) => e.due <= now).length],
+                ['Acquis (boîte 5)', words.filter(([, e]) => e.box === 5).length]
+            ];
+            stats.forEach(([label, value]) => {
+                const div = document.createElement('div');
+                div.className = 'stat';
+                const strong = document.createElement('strong');
+                strong.textContent = value;
+                div.append(strong, label);
+                summary.appendChild(div);
+            });
+
+            const rows = document.getElementById('rows');
+            rows.textContent = '';
+            if (words.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 6;
+                td.className = 'empty';
+                td.textContent = 'Aucun mot joué pour l\'instant.';
+                tr.appendChild(td);
+                rows.appendChild(tr);
+                return;
+            }
+
+            words.forEach(([word, e]) => {
+                const tr = document.createElement('tr');
+                cell(tr, word);
+                const box = document.createElement('span');
+                box.className = `box box-${e.box}`;
+                box.textContent = e.box;
+                cell(tr, box);
+                cell(tr, e.ok);
+                cell(tr, e.ko);
+                cell(tr, fmt(e.last));
+                const isDue = e.due <= now;
+                cell(tr, isDue ? 'Maintenant' : fmt(e.due), isDue ? 'due' : '');
+                rows.appendChild(tr);
+            });
+        }
+
+        document.getElementById('reset').addEventListener('click', () => {
+            if (confirm('Effacer tout le suivi des mots sur cet appareil ?')) {
+                Progress.reset();
+                render();
+            }
+        });
+
+        render();
+    </script>
+</body>
+</html>

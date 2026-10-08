@@ -430,6 +430,7 @@
 
     <div class="big-rocket" id="bigRocket">🚀</div>
 
+    <script src="common.js"></script>
     <script>
         // Mots avec syllabes séparées par des virgules
         const defaultWords = [
@@ -512,6 +513,12 @@
 
         // Minuterie du passage au mot suivant : tant qu'elle court, le mot est bloqué
         let nextWordTimer = null;
+        let failedThisWord = false; // un mot raté puis réussi compte comme raté
+
+        function recordFailure() {
+            if (!failedThisWord) Progress.record(currentWord, false, 'colors');
+            failedThisWord = true;
+        }
 
         // Charger un nouveau mot
         function loadNewWord() {
@@ -521,7 +528,8 @@
                 message.textContent = 'Aucun mot disponible !';
                 return;
             }
-            currentWord = words[Math.floor(Math.random() * words.length)];
+            currentWord = Progress.next(words, currentWord);
+            failedThisWord = false;
             syllables = currentWord.split(',');
             selectedColor = null;
             letterColors = [];
@@ -629,6 +637,7 @@
                 const firstColor = syllableLetterColors[0];
                 if (!syllableLetterColors.every(color => color === firstColor)) {
                     showMessage('Chaque syllabe doit avoir une seule couleur !', 'error');
+                    recordFailure();
                     return;
                 }
 
@@ -640,12 +649,14 @@
             const uniqueColors = new Set(syllableColors);
             if (uniqueColors.size !== syllableColors.length) {
                 showMessage('Chaque syllabe doit avoir une couleur différente !', 'error');
+                recordFailure();
                 return;
             }
 
             // Bonne réponse !
             score += 10;
             saveScore();
+            if (!failedThisWord) Progress.record(currentWord, true, 'colors');
             showMessage('✓ Bravo ! Toutes les syllabes sont bien coloriées !', 'success');
 
             // Animations de célébration

@@ -454,6 +454,7 @@
     <div class="message" id="message"></div>
     <div class="big-rocket" id="bigRocket">🚀</div>
 
+    <script src="common.js"></script>
     <script>
         // Mots par défaut
         const defaultWords = [
@@ -547,6 +548,7 @@
 
         // Minuterie du passage au mot suivant : tant qu'elle court, le mot est bloqué
         let nextWordTimer = null;
+        let failedThisWord = false; // un mot raté puis réussi compte comme raté
 
         // Charger un nouveau mot
         function loadNewWord() {
@@ -557,7 +559,8 @@
                 return;
             }
 
-            currentWord = words[Math.floor(Math.random() * words.length)];
+            currentWord = Progress.next(words, currentWord);
+            failedThisWord = false;
             currentSyllables = currentWord.split(',');
             assembledSyllables = [];
             message.textContent = '';
@@ -641,6 +644,7 @@
                 // Bonne réponse!
                 score += 10;
                 saveScore();
+                if (!failedThisWord) Progress.record(currentWord, true, 'rocket');
                 showMessage('✓ Bravo! Décollage! 🚀', 'green');
 
                 // Lancer la grosse fusée
@@ -650,6 +654,8 @@
                 nextWordTimer = setTimeout(loadNewWord, 3500);
             } else {
                 showMessage('✗ Essaie encore!', 'red');
+                if (!failedThisWord) Progress.record(currentWord, false, 'rocket');
+                failedThisWord = true;
             }
         }
 

@@ -579,6 +579,7 @@
 
     <div class="big-rocket" id="bigRocket">🚀</div>
 
+    <script src="common.js"></script>
     <script>
         // Mots par défaut
         const defaultWords = [
@@ -742,7 +743,7 @@
 
         // Démarrer une nouvelle dictée
         function startDictee() {
-            currentWords = shuffle(words);
+            currentWords = Progress.order(words);
             currentIndex = 0;
             mistakes = [];
             gameContainer.style.display = 'block';
@@ -886,6 +887,7 @@
                 feedback.className = 'feedback correct';
                 score++;
                 saveScore();
+                Progress.record(currentWord, true, 'dictee');
 
                 // Animations de célébration
                 window.confetti?.({
@@ -914,6 +916,7 @@
                 correctWord.textContent = `Le mot était : ${currentWord}`;
                 correctWord.classList.add('visible');
 
+                Progress.record(currentWord, false, 'dictee');
                 mistakes.push({
                     word: currentWord,
                     userAnswer: userAnswer
