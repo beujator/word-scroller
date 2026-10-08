@@ -81,3 +81,61 @@ const Progress = (() => {
 
     return { all, attempt, order, next, reset };
 })();
+
+// Lecture d'un mot : voix générée par le serveur (/api/tts, identique partout),
+// sinon la meilleure voix française du navigateur.
+const Speech = (() => {
+    const player = new Audio();
+    const prepared = new Map(); // mot → Promise<URL audio | null>
+
+    // À appeler dès qu'un mot est connu : l'audio est prêt au moment du clic (iPad)
+    function prepare(word) {
+        const text = word.replace(/,/g, '').trim();
+        if (!prepared.has(text)) {
+            prepared.set(text, fetch(`/api/tts?w=${encodeURIComponent(text)}`)
+                .then(r => (r.ok ? r.blob() : null))
+                .then(blob => blob && URL.createObjectURL(blob))
+                .catch(() => null));
+        }
+        return prepared.get(text);
+    }
+
+    // Voix « améliorées » d'abord (iPad, macOS), puis Google / Microsoft, puis n'importe quelle voix fr
+    function bestVoice() {
+        const voices = speechSynthesis.getVoices().filter(v => v.lang.replace('_', '-').startsWith('fr'));
+        const score = v => (/premium|enhanced|améliorée|natural|neural|online/i.test(v.name) ? 4 : 0)
+            + (/audrey|thomas|amélie|denise|google/i.test(v.name) ? 2 : 0)
+            + (v.lang === 'fr-FR' ? 1 : 0);
+        return voices.sort((a, b) => score(b) - score(a))[0];
+    }
+
+    function browserSay(text) {
+        if (!window.speechSynthesis) return;
+        speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'fr-FR';
+        utterance.rate = 0.85; // plus lent pour les enfants
+        const voice = bestVoice();
+        if (voice) utterance.voice = voice;
+        speechSynthesis.speak(utterance);
+    }
+
+    async function say(word, onEnd) {
+        const text = word.replace(/,/g, '').trim();
+        const url = await prepare(text);
+        if (url) {
+            player.src = url;
+            player.onended = onEnd || null;
+            try {
+                await player.play();
+                return;
+            } catch {
+                // lecture refusée : on tente la voix du navigateur
+            }
+        }
+        browserSay(text);
+        onEnd?.();
+    }
+
+    return { prepare, say };
+})();
