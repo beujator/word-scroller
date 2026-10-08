@@ -248,6 +248,17 @@
             cursor: not-allowed;
         }
 
+        .key.vowel {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            border-color: #0ea5e9;
+            color: #0c4a6e;
+        }
+
+        .key.vowel:hover:not(:disabled) {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+        }
+
         .controls {
             display: flex;
             gap: 20px;
@@ -659,6 +670,7 @@
     <div class="rocket" id="rocket">🚀</div>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="common.js"></script>
     <script>
         // Default words
         const DEFAULT_WORDS = [
@@ -668,7 +680,7 @@
             'so,leil',
             'é,toile',
             'ci,tron',
-            'po,isson',
+            'pois,son',
             'pa,pier',
             'cra,yon',
             'fe,nêtre',
@@ -757,7 +769,7 @@
         function loadWords() {
             const savedWords = localStorage.getItem('snowmanWords');
             if (savedWords) {
-                currentWords = savedWords.split('\n').filter(w => w.trim());
+                currentWords = savedWords.split('\n').map(w => w.trim()).filter(Boolean);
             } else {
                 currentWords = [...DEFAULT_WORDS];
             }
@@ -803,7 +815,7 @@
                 const data = await response.json();
 
                 if (data.success && data.list.words) {
-                    currentWords = data.list.words.filter(w => w.trim());
+                    currentWords = data.list.words.map(w => w.trim()).filter(Boolean);
                     newGame();
                     statusElement.textContent = '✓ Liste chargée';
 
@@ -837,7 +849,7 @@
 
             letters.forEach(letter => {
                 const button = document.createElement('button');
-                button.className = 'key';
+                button.className = isVowel(letter.toLowerCase()) ? 'key vowel' : 'key';
                 button.textContent = letter;
                 button.onclick = () => guessLetter(letter);
                 keyboard.appendChild(button);
@@ -852,8 +864,7 @@
             }
 
             // Pick random word
-            const randomIndex = Math.floor(Math.random() * currentWords.length);
-            const wordWithSyllables = currentWords[randomIndex];
+            const wordWithSyllables = Progress.next(currentWords, currentWordSyllables.join(','));
 
             // Parse syllables
             currentWordSyllables = wordWithSyllables.split(',');
@@ -876,11 +887,28 @@
             document.getElementById('message').className = 'message';
         }
 
+        // Lettre de base sans accent, pour le clavier A-Z : é → e, ç → c, œ → o
+        function baseLetter(char) {
+            return char.toLowerCase().replace(/œ/g, 'o').replace(/æ/g, 'a')
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        // Tiret, apostrophe, espace : déjà « trouvés », ils ne sont pas sur le clavier
+        function isFound(char) {
+            const base = baseLetter(char);
+            return !/^[a-z]$/.test(base) || guessedLetters.includes(base);
+        }
+
+        // Lettres de base du mot encore à trouver
+        function missingLetters() {
+            return [...new Set([...currentWord].filter(c => !isFound(c)).map(baseLetter))];
+        }
+
         // Guess letter
         function guessLetter(letter) {
             if (gameOver) return;
 
-            const lowerLetter = letter.toLowerCase();
+            const lowerLetter = baseLetter(letter);
 
             // Disable button
             const buttons = document.querySelectorAll('.key');
@@ -891,7 +919,7 @@
             });
 
             // Check if letter is in word
-            if (currentWord.includes(lowerLetter)) {
+            if ([...currentWord].some(c => baseLetter(c) === lowerLetter)) {
                 guessedLetters.push(lowerLetter);
                 updateWordDisplay();
 
@@ -913,103 +941,43 @@
             }
         }
 
-        // Show vowel helper
-        function showVowel() {
+        // Aides : révèle une voyelle, une consonne ou n'importe quelle lettre manquante
+        function revealLetter(filter, emptyMessage) {
             if (gameOver) return;
-
-            const vowels = 'aeiouyéèêëàâäôöùûüÿ';
-            const availableVowels = [];
-
-            // Find vowels in the word that haven't been guessed yet
-            for (let char of currentWord) {
-                if (vowels.includes(char) && !guessedLetters.includes(char) && !availableVowels.includes(char)) {
-                    availableVowels.push(char);
-                }
-            }
-
-            if (availableVowels.length === 0) {
-                alert('Toutes les voyelles ont déjà été trouvées!');
+            const candidates = missingLetters().filter(filter);
+            if (candidates.length === 0) {
+                alert(emptyMessage);
                 return;
             }
-
-            // Pick random vowel
-            const randomVowel = availableVowels[Math.floor(Math.random() * availableVowels.length)];
-            guessLetter(randomVowel.toUpperCase());
+            const letter = candidates[Math.floor(Math.random() * candidates.length)];
+            guessLetter(letter.toUpperCase());
         }
 
-        // Show consonant helper
-        function showConsonant() {
-            if (gameOver) return;
-
-            const vowels = 'aeiouyéèêëàâäôöùûüÿ';
-            const availableConsonants = [];
-
-            // Find consonants in the word that haven't been guessed yet
-            for (let char of currentWord) {
-                if (!vowels.includes(char) && !guessedLetters.includes(char) && !availableConsonants.includes(char)) {
-                    availableConsonants.push(char);
-                }
-            }
-
-            if (availableConsonants.length === 0) {
-                alert('Toutes les consonnes ont déjà été trouvées!');
-                return;
-            }
-
-            // Pick random consonant
-            const randomConsonant = availableConsonants[Math.floor(Math.random() * availableConsonants.length)];
-            guessLetter(randomConsonant.toUpperCase());
-        }
-
-        // Show any letter helper
-        function showLetter() {
-            if (gameOver) return;
-
-            const availableLetters = [];
-
-            // Find letters in the word that haven't been guessed yet
-            for (let char of currentWord) {
-                if (!guessedLetters.includes(char) && !availableLetters.includes(char)) {
-                    availableLetters.push(char);
-                }
-            }
-
-            if (availableLetters.length === 0) {
-                alert('Toutes les lettres ont déjà été trouvées!');
-                return;
-            }
-
-            // Pick random letter
-            const randomLetter = availableLetters[Math.floor(Math.random() * availableLetters.length)];
-            guessLetter(randomLetter.toUpperCase());
-        }
+        const isVowel = c => 'aeiouy'.includes(c);
+        const showVowel = () => revealLetter(isVowel, 'Toutes les voyelles ont déjà été trouvées!');
+        const showConsonant = () => revealLetter(c => !isVowel(c), 'Toutes les consonnes ont déjà été trouvées!');
+        const showLetter = () => revealLetter(() => true, 'Toutes les lettres ont déjà été trouvées!');
 
         // Update word display
         function updateWordDisplay() {
-            let displayText = '';
-            let charIndex = 0;
-            let syllableIndex = 0;
+            const display = document.getElementById('word-display');
+            display.textContent = '';
 
-            for (let i = 0; i < currentWordSyllables.length; i++) {
-                const syllable = currentWordSyllables[i];
-                const isSecondSyllable = (i === 1);
-
-                for (let j = 0; j < syllable.length; j++) {
-                    const char = syllable[j].toLowerCase();
-
-                    if (guessedLetters.includes(char)) {
-                        if (isSecondSyllable) {
-                            displayText += `<span class="second-syllable">${char.toUpperCase()}</span> `;
-                        } else {
-                            displayText += char.toUpperCase() + ' ';
-                        }
+            currentWordSyllables.forEach((syllable, i) => {
+                for (const char of syllable) {
+                    if (display.childNodes.length) display.append(' ');
+                    if (!isFound(char)) {
+                        display.append('_');
+                    } else if (i === 1) {
+                        const span = document.createElement('span');
+                        span.className = 'second-syllable';
+                        span.textContent = char.toUpperCase();
+                        display.append(span);
                     } else {
-                        displayText += '_ ';
+                        display.append(char.toUpperCase());
                     }
                 }
-            }
-
-            document.getElementById('word-display').innerHTML = displayText.trim();
+            });
         }
 
         // Update errors display
@@ -1025,12 +993,7 @@
 
         // Check if word is complete
         function isWordComplete() {
-            for (let char of currentWord) {
-                if (!guessedLetters.includes(char)) {
-                    return false;
-                }
-            }
-            return true;
+            return [...currentWord].every(isFound);
         }
 
         // Remove snowman part
@@ -1082,6 +1045,7 @@
 
         // Win
         function win() {
+            Progress.attempt(currentWord, true, 'snowman');
             gameOver = true;
             disableAllKeys();
             disableHelpButtons();
@@ -1105,6 +1069,7 @@
 
         // Lose
         function lose() {
+            Progress.attempt(currentWord, false, 'snowman');
             gameOver = true;
             disableAllKeys();
             disableHelpButtons();
@@ -1116,7 +1081,7 @@
 
         // Launch confetti
         function launchConfetti() {
-            confetti({
+            window.confetti?.({
                 particleCount: 100,
                 spread: 70,
                 origin: { y: 0.6 }
