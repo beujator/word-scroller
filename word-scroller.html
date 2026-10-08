@@ -362,10 +362,9 @@
         let words = [];
 
         function loadWords() {
-            const savedWords = localStorage.getItem('scrollerWords');
-            if (savedWords) {
-                words = JSON.parse(savedWords);
-            } else {
+            try {
+                words = JSON.parse(localStorage.getItem('scrollerWords')) || [...defaultWords];
+            } catch {
                 words = [...defaultWords];
             }
             shuffle(words);
